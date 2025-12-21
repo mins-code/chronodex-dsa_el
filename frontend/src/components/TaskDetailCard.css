@@ -1,0 +1,52 @@
+.task-detail-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.task-detail-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  padding: 40px 32px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  border-left: 8px solid #999;
+}
+
+.task-detail-card.priority-Critical { border-left-color: #dc3545; }
+.task-detail-card.priority-High { border-left-color: #ff9800; }
+.task-detail-card.priority-Medium { border-left-color: #ffc107; }
+.task-detail-card.priority-Low { border-left-color: #17a2b8; }
+
+.task-detail-card h2 {
+  margin-bottom: 18px;
+  color: #333;
+}
+
+.task-detail-card p {
+  color: #555;
+  margin-bottom: 18px;
+}
+
+.task-detail-info {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 18px;
+  gap: 10px;
+  font-size: 1.1em;
+}
+
+.task-detail-info span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-detail-score {
+  font-size: 1.1em;
+  color: #333;
+  margin-top: 10px;
+}

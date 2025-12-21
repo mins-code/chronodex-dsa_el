@@ -1,0 +1,142 @@
+/* General App Layout */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+/* Sidebar */
+.sidebar {
+  flex: 0 0 250px;
+  height: 100vh;
+  background-color: #1a1a1a;
+  color: #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: fixed;
+  left: 0;
+  top: 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: 250px;
+  padding: 30px;
+  background-color: #f5f5f5;
+  color: #333;
+  overflow-y: auto;
+  height: 100vh;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 20px;
+}
+
+.title-group {
+  flex: 1;
+}
+
+.title-group h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  color: #333;
+}
+
+.subtitle {
+  margin: 5px 0 0 0;
+  font-size: 1rem;
+  color: #666;
+}
+
+/* Global Undo Button */
+.global-undo {
+  text-align: right;
+}
+
+.global-undo button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.global-undo button:hover {
+  background-color: #0056b3;
+}
+
+/* Dashboard */
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Create Task */
+.create-task {
+  max-width: 600px;
+  margin: 0;
+}
+
+/* Dependencies */
+.dependencies {
+  max-width: 1000px;
+  margin: 0;
+}
+
+/* Settings */
+.settings {
+  text-align: center;
+  margin-top: 50px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar {
+    flex: 0 0 60px;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .main-content {
+    margin-left: 60px;
+    padding: 20px;
+  }
+
+  .sidebar-link {
+    justify-content: center;
+    font-size: 0;
+  }
+
+  .sidebar-link .sidebar-icon {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    display: none;
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+}

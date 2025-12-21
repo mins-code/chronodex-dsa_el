@@ -1,0 +1,151 @@
+.priority-card {
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border-left: 10px solid gray;
+    background: #f9f9f9;
+}
+
+.priority-Critical { border-left-color: #ff4d4d; background: #fff5f5; }
+.priority-High { border-left-color: #ff944d; background: #fffaf5; }
+.priority-Medium { border-left-color: #ffd11a; background: #fffff0; }
+.priority-Low { border-left-color: #4db8ff; background: #f5faff; }
+
+.priority-queue-view {
+  width: 100%;
+}
+
+.priority-queue-view h2 {
+  margin-top: 0;
+  margin-bottom: 25px;
+  color: #333;
+}
+
+.task-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.task-card-btn {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border-left: 5px solid #999;
+  transition: box-shadow 0.2s, transform 0.1s;
+  position: relative;
+  text-align: left;
+}
+
+.task-card-btn:focus,
+.task-card-btn:hover {
+  background: #f3f8ff; /* Very light blue */
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.task-card-btn.priority-Critical { border-left-color: #dc3545; }
+.task-card-btn.priority-High { border-left-color: #ff9800; }
+.task-card-btn.priority-Medium { border-left-color: #ffc107; }
+.task-card-btn.priority-Low { border-left-color: #17a2b8; }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.2em;
+  color: #333;
+  flex: 1;
+}
+
+.priority-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.priority-badge.priority-Critical { background-color: #f8d7da; color: #721c24; }
+.priority-badge.priority-High { background-color: #ffe0b2; color: #e65100; }
+.priority-badge.priority-Medium { background-color: #fff9c4; color: #f57f17; }
+.priority-badge.priority-Low { background-color: #b3e5fc; color: #0277bd; }
+
+.delete-icon {
+  color: #dc3545;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: color 0.2s;
+}
+.delete-icon:hover {
+  color: #a71d2a;
+}
+
+.card-description {
+  color: #666;
+  margin: 10px 0 12px 0;
+  font-size: 0.95em;
+  line-height: 1.4;
+}
+
+.card-details {
+  border-top: 1px solid #eee;
+  padding-top: 12px;
+  width: 100%;
+}
+
+.card-details p {
+  margin: 8px 0;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.card-details strong {
+  color: #333;
+}
+
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  padding: 14px 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  font-size: 1rem;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.undo-btn-inline {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 16px;
+  margin-left: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.undo-btn-inline:hover {
+  background: #77a7c1;
+}
