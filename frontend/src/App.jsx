@@ -9,6 +9,7 @@ import TaskDetailCard from './components/TaskDetailCard';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
+import SettingsPage from './components/SettingsPage';
 import './App.css';
 
 function App() {
@@ -104,12 +105,7 @@ function App() {
                     {/* Settings Route */}
                     <Route
                       path="/settings"
-                      element={
-                        <div className="settings">
-                          <h2>Settings</h2>
-                          <p>Settings coming soon...</p>
-                        </div>
-                      }
+                      element={<SettingsPage user={user} onLogout={handleLogout} />}
                     />
 
                     {/* Task Detail Route */}

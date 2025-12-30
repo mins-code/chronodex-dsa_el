@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task');
-const { createTask, completeTask, deleteTask, undoDelete } = require('../controllers/taskController'); // Import undoDelete
-const { taskTrie, taskQueue } = require('../state'); // Import data structure instances
+const { createTask, completeTask, deleteTask, undoDelete, clearAllTasks } = require('../controllers/taskController');
+const { taskTrie, taskQueue } = require('../state');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // POST / - Create a new task
 router.post('/', createTask);
@@ -12,6 +13,9 @@ router.patch('/:taskId/complete', completeTask);
 
 // DELETE /:taskId - Delete a task
 router.delete('/:taskId', deleteTask);
+
+// DELETE /clear - Clear all tasks (protected)
+router.delete('/clear', authMiddleware, clearAllTasks);
 
 // POST /undo - Undo the last deleted task
 router.post('/undo', undoDelete);

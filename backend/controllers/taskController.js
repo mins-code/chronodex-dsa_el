@@ -221,4 +221,26 @@ const undoDelete = async (req, res) => {
   }
 };
 
-module.exports = { createTask, completeTask, deleteTask, undoDelete };
+// Clear all tasks and reset data structures
+const clearAllTasks = async (req, res) => {
+  try {
+    // Delete all tasks from MongoDB
+    await Task.deleteMany({});
+
+    // Reset all in-memory data structures
+    taskQueue.heap = [];
+    taskTrie.root = { children: {}, taskIds: [] };
+    dependencyGraph.adjacencyList = new Map();
+    intervalScheduler.intervals = [];
+    undoStack.stack = [];
+
+    res.status(200).json({
+      message: 'All tasks cleared and data structures reset successfully.',
+    });
+  } catch (error) {
+    console.error('Error clearing tasks:', error);
+    res.status(500).json({ error: 'An error occurred while clearing tasks.' });
+  }
+};
+
+module.exports = { createTask, completeTask, deleteTask, undoDelete, clearAllTasks };
