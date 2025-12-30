@@ -21,8 +21,8 @@ const taskSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'overdue'],
-      default: 'pending',
+      enum: ['to-do', 'in-progress', 'completed', 'pending', 'overdue'],
+      default: 'to-do',
     },
     duration: {
       type: Number, // in minutes

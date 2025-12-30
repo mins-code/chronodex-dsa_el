@@ -32,22 +32,30 @@ const TaskForm = () => {
 
     try {
       const response = await createTask(formData);
-      if (response.warning) {
-        setWarning(response.warning);
-      } else {
-        setSuccessMessage(`✓ Task "${formData.title}" created successfully!`);
-        setFormData({
-          title: '',
-          description: '',
-          deadline: '',
-          priority: 'Medium',
-          duration: '',
-        });
-        setTimeout(() => setSuccessMessage(null), 3000);
-      }
+
+      // Success - clear the form
+      setSuccessMessage(`✓ Task "${formData.title}" created successfully!`);
+      setFormData({
+        title: '',
+        description: '',
+        deadline: '',
+        priority: 'Medium',
+        duration: '',
+      });
+      setTimeout(() => setSuccessMessage(null), 3000);
+
     } catch (error) {
       console.error('Error creating task:', error);
-      setWarning('Failed to create task. Please try again.');
+
+      // Check if it's a 409 Conflict error
+      if (error.response && error.response.status === 409) {
+        setWarning('This time slot is already taken. Please choose another time.');
+        // Do NOT clear form fields - user can adjust and try again
+      } else {
+        // Other errors
+        const errorMessage = error.response?.data?.error || 'Failed to create task. Please try again.';
+        setWarning(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

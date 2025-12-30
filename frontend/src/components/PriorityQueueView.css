@@ -1,15 +1,30 @@
 .priority-card {
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 8px;
-    border-left: 10px solid gray;
-    background: #f9f9f9;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border-left: 10px solid gray;
+  background: #f9f9f9;
 }
 
-.priority-Critical { border-left-color: #ff4d4d; background: #fff5f5; }
-.priority-High { border-left-color: #ff944d; background: #fffaf5; }
-.priority-Medium { border-left-color: #ffd11a; background: #fffff0; }
-.priority-Low { border-left-color: #4db8ff; background: #f5faff; }
+.priority-Critical {
+  border-left-color: #ff4d4d;
+  background: #fff5f5;
+}
+
+.priority-High {
+  border-left-color: #ff944d;
+  background: #fffaf5;
+}
+
+.priority-Medium {
+  border-left-color: #ffd11a;
+  background: #fffff0;
+}
+
+.priority-Low {
+  border-left-color: #4db8ff;
+  background: #f5faff;
+}
 
 .priority-queue-view {
   width: 100%;
@@ -47,15 +62,27 @@
 
 .task-card-btn:focus,
 .task-card-btn:hover {
-  background: #f3f8ff; /* Very light blue */
+  background: #f3f8ff;
+  /* Very light blue */
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.08);
   transform: translateY(-2px);
 }
 
-.task-card-btn.priority-Critical { border-left-color: #dc3545; }
-.task-card-btn.priority-High { border-left-color: #ff9800; }
-.task-card-btn.priority-Medium { border-left-color: #ffc107; }
-.task-card-btn.priority-Low { border-left-color: #17a2b8; }
+.task-card-btn.priority-Critical {
+  border-left-color: #dc3545;
+}
+
+.task-card-btn.priority-High {
+  border-left-color: #ff9800;
+}
+
+.task-card-btn.priority-Medium {
+  border-left-color: #ffc107;
+}
+
+.task-card-btn.priority-Low {
+  border-left-color: #17a2b8;
+}
 
 .card-header {
   display: flex;
@@ -79,10 +106,25 @@
   white-space: nowrap;
 }
 
-.priority-badge.priority-Critical { background-color: #f8d7da; color: #721c24; }
-.priority-badge.priority-High { background-color: #ffe0b2; color: #e65100; }
-.priority-badge.priority-Medium { background-color: #fff9c4; color: #f57f17; }
-.priority-badge.priority-Low { background-color: #b3e5fc; color: #0277bd; }
+.priority-badge.priority-Critical {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.priority-badge.priority-High {
+  background-color: #ffe0b2;
+  color: #e65100;
+}
+
+.priority-badge.priority-Medium {
+  background-color: #fff9c4;
+  color: #f57f17;
+}
+
+.priority-badge.priority-Low {
+  background-color: #b3e5fc;
+  color: #0277bd;
+}
 
 .delete-icon {
   color: #dc3545;
@@ -90,8 +132,127 @@
   margin-left: 10px;
   transition: color 0.2s;
 }
+
 .delete-icon:hover {
   color: #a71d2a;
+}
+
+.complete-icon {
+  color: #28a745;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: color 0.2s;
+}
+
+.complete-icon:hover {
+  color: #1e7e34;
+}
+
+.status-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.status-btn.status-todo {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.status-btn.status-todo:hover {
+  background: #d1d5db;
+}
+
+.status-btn.status-inprogress {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-btn.status-inprogress:hover {
+  background: #bfdbfe;
+}
+
+.status-btn.status-completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-btn.status-completed:hover {
+  background: #bbf7d0;
+}
+
+.status-dropdown {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: all 0.2s;
+  white-space: nowrap;
+  outline: none;
+}
+
+.status-dropdown:hover {
+  border-color: #9ca3af;
+}
+
+.status-dropdown:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.status-dropdown.status-todo {
+  background: #e5e7eb;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.status-dropdown.status-inprogress {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: #93c5fd;
+}
+
+.status-dropdown.status-completed {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.status-completed-badge {
+  background: #dcfce7;
+  color: #166534;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-left: 10px;
+}
+
+.completed-title {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.completed-task-card {
+  opacity: 0.7;
+  background: #f8f9fa !important;
+}
+
+.completed-task-card:hover {
+  opacity: 0.85;
+}
+
+.completed-text {
+  opacity: 0.6;
 }
 
 .card-description {
@@ -126,7 +287,7 @@
   color: #fff;
   padding: 14px 30px;
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   font-size: 1rem;
   z-index: 2000;
   display: flex;

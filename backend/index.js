@@ -17,9 +17,9 @@ const app = express();
 
 // Middleware: Updated CORS to explicitly allow your Vite frontend
 app.use(cors({
-    origin: 'http://localhost:5173', // Vite's default port
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    credentials: true
+  origin: 'http://localhost:5173', // Vite's default port
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  credentials: true
 }));
 
 app.use(express.json());
@@ -74,9 +74,12 @@ mongoose
   })
   .catch((err) => console.log('MongoDB connection error:', err));
 
-// Import and use task routes
+// Import and use routes
 const taskRouter = require('./routes/taskRoutes');
+const authRouter = require('./routes/authRoutes');
+
 app.use('/api/tasks', taskRouter);
+app.use('/api/auth', authRouter);
 
 // A simple route to test if the server is working
 app.get('/', (req, res) => {
@@ -86,5 +89,5 @@ app.get('/', (req, res) => {
 // Set port and start listening
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port: ${PORT}`);
+  console.log(`Server is running on port: ${PORT}`);
 });

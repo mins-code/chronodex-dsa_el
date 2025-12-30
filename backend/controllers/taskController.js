@@ -11,6 +11,21 @@ const createTask = async (req, res) => {
       return res.status(400).json({ error: 'Title, deadline, and priority are required.' });
     }
 
+    // Check for conflicts BEFORE creating the task
+    if (deadline && duration) {
+      const startTime = new Date(deadline).getTime() - duration * 60 * 1000; // Calculate start time
+      const endTime = new Date(deadline).getTime(); // Deadline as end time
+
+      const conflicts = intervalScheduler.findConflicts(startTime, endTime);
+      if (conflicts.length > 0) {
+        // Return 409 Conflict status and do NOT save the task
+        return res.status(409).json({
+          error: 'The specified time slot conflicts with existing tasks.',
+          conflicts: conflicts
+        });
+      }
+    }
+
     // Calculate priorityScore before saving
     const priorityScore = PriorityQueue.calculateScore(deadline, priority);
 
@@ -22,13 +37,12 @@ const createTask = async (req, res) => {
       priority,
       duration,
       prerequisites,
-      priorityScore, // <-- Add this line
+      priorityScore,
     });
 
     const savedTask = await newTask.save();
 
-    // 1. Calculate priorityScore and insert into PriorityQueue
-    // const priorityScore = PriorityQueue.calculateScore(deadline, priority); // Fixed the syntax error
+    // 1. Insert into PriorityQueue
     taskQueue.insert({ taskId: savedTask._id, priorityScore });
 
     // 2. Insert the title into the Trie for searching
@@ -43,31 +57,25 @@ const createTask = async (req, res) => {
 
       // Check for cycles in the DependencyGraph
       if (dependencyGraph.detectCycle()) {
+        // Rollback: delete the task from MongoDB
+        await Task.findByIdAndDelete(savedTask._id);
         return res.status(400).json({
           error: 'Adding this task creates a circular dependency.',
         });
       }
     }
 
-    // 4. Check for conflicts using IntervalScheduler
-    let conflictWarning = null;
+    // 4. Add interval to scheduler (only if no conflict was detected)
     if (deadline && duration) {
-      const startTime = new Date(deadline).getTime() - duration * 60 * 1000; // Calculate start time
-      const endTime = new Date(deadline).getTime(); // Deadline as end time
-
-      const conflicts = intervalScheduler.findConflicts(startTime, endTime);
-      if (conflicts.length > 0) {
-        conflictWarning = 'The specified time slot conflicts with existing tasks.';
-      } else {
-        intervalScheduler.addInterval(startTime, endTime, savedTask._id);
-      }
+      const startTime = new Date(deadline).getTime() - duration * 60 * 1000;
+      const endTime = new Date(deadline).getTime();
+      intervalScheduler.addInterval(startTime, endTime, savedTask._id);
     }
 
-    // Respond with the saved task and any warnings
+    // Respond with the saved task
     res.status(201).json({
       message: 'Task created successfully.',
       task: savedTask,
-      warning: conflictWarning,
     });
   } catch (error) {
     console.error('Error creating task:', error);

@@ -62,6 +62,24 @@ const DependencyGraphView = () => {
     }
   };
 
+  // Handle completing a task with proper error handling
+  const handleCompleteTask = async (taskId, isBlocked, prereqTask) => {
+    if (isBlocked) {
+      alert(`Cannot complete task: Prerequisites not finished.\nPlease complete "${prereqTask?.title || 'prerequisite task'}" first.`);
+      return;
+    }
+
+    try {
+      await completeTask(taskId);
+      // Success: refresh the task list to show updated statuses
+      fetchTasks();
+    } catch (error) {
+      // Show error message from backend (Graph DS validation)
+      const errorMessage = error.response?.data?.error || 'Failed to complete task.';
+      alert(errorMessage);
+    }
+  };
+
   // Tasks with prerequisites
   const tasksWithPrereqs = tasks.filter((task) => task.prerequisites && task.prerequisites.length > 0);
 
@@ -117,11 +135,11 @@ const DependencyGraphView = () => {
                     </div>
                   </div>
                   <button
-                    className="dep-complete-btn"
-                    disabled={isBlocked || isCompleted}
-                    onClick={() => completeTask(task._id).then(fetchTasks)}
+                    className={`dep-complete-btn${isBlocked ? ' blocked' : ''}${isCompleted ? ' completed' : ''}`}
+                    onClick={() => handleCompleteTask(task._id, isBlocked, prereqTask)}
+                    disabled={isCompleted}
                   >
-                    {isCompleted ? 'Done' : 'Complete'}
+                    {isCompleted ? 'Done' : isBlocked ? 'Blocked' : 'Complete'}
                   </button>
                 </div>
               );

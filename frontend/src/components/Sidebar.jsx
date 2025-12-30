@@ -1,10 +1,12 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom'; // Import NavLink for routing
-import { LayoutDashboard, PlusCircle, GitBranch, Settings } from 'lucide-react'; // Import icons
-import { undoDelete } from '../api'; // Import undoDelete function
-import './Sidebar.css'; // Import CSS for styling
+import { NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, PlusCircle, GitBranch, Settings, LogOut, User } from 'lucide-react';
+import { undoDelete } from '../api';
+import './Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ user, onLogout }) => {
+  const navigate = useNavigate();
+
   // Handle the "Global Undo" button click
   const handleUndo = async () => {
     try {
@@ -17,8 +19,25 @@ const Sidebar = () => {
     }
   };
 
+  const handleLogout = () => {
+    onLogout();
+    navigate('/login');
+  };
+
   return (
     <div className="sidebar">
+      {user && (
+        <div className="sidebar-user">
+          <div className="user-avatar">
+            <User size={24} />
+          </div>
+          <div className="user-info">
+            <p className="user-name">{user.username}</p>
+            <p className="user-email">{user.email}</p>
+          </div>
+        </div>
+      )}
+
       <nav className="sidebar-nav">
         <NavLink to="/" className="sidebar-link" activeClassName="active">
           <LayoutDashboard size={20} className="sidebar-icon" />
@@ -37,9 +56,16 @@ const Sidebar = () => {
           Settings
         </NavLink>
       </nav>
-      <button className="undo-btn" onClick={handleUndo}>
-        ↩ Undo Last Delete
-      </button>
+
+      <div className="sidebar-footer">
+        <button className="undo-btn" onClick={handleUndo}>
+          ↩ Undo Last Delete
+        </button>
+        <button className="logout-btn" onClick={handleLogout}>
+          <LogOut size={18} />
+          Logout
+        </button>
+      </div>
     </div>
   );
 };

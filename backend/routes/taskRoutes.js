@@ -107,4 +107,32 @@ router.put('/:taskId', async (req, res) => {
   }
 });
 
+// PATCH /:taskId - Update task status
+router.patch('/:taskId', async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    // Validate status
+    const validStatuses = ['to-do', 'in-progress', 'completed'];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be to-do, in-progress, or completed.' });
+    }
+
+    const updatedTask = await Task.findByIdAndUpdate(
+      req.params.taskId,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({ error: 'Task not found.' });
+    }
+
+    res.status(200).json(updatedTask);
+  } catch (error) {
+    console.error('Error updating task status:', error);
+    res.status(500).json({ error: 'Failed to update task status.' });
+  }
+});
+
 module.exports = router;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getPriorityTasks, deleteTask, undoDelete } from '../api';
+import { getPriorityTasks, deleteTask, undoDelete, updateTaskStatus } from '../api';
 import { Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './PriorityQueueView.css';
@@ -49,6 +49,17 @@ const PriorityQueueView = () => {
     }
   };
 
+  const handleStatusChange = async (taskId, newStatus) => {
+    try {
+      await updateTaskStatus(taskId, newStatus);
+      // Success: refresh the task list
+      fetchTasks();
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || 'Failed to update task status.';
+      alert(errorMessage);
+    }
+  };
+
   const handleCardClick = (taskId) => {
     navigate(`/task/${taskId}`);
   };
@@ -65,24 +76,60 @@ const PriorityQueueView = () => {
     return <div className="priority-queue-view"><p>No tasks found.</p></div>;
   }
 
+  // Sort tasks: non-completed first, completed last
+  const sortedTasks = [...tasks].sort((a, b) => {
+    const aCompleted = a.status === 'completed';
+    const bCompleted = b.status === 'completed';
+    if (aCompleted && !bCompleted) return 1;
+    if (!aCompleted && bCompleted) return -1;
+    return 0;
+  });
+
+  // Get status display info
+  const getStatusInfo = (status) => {
+    const statusMap = {
+      'to-do': { label: 'To Do', className: 'status-todo' },
+      'in-progress': { label: 'In Progress', className: 'status-inprogress' },
+      'completed': { label: 'Completed', className: 'status-completed' }
+    };
+    return statusMap[status] || statusMap['to-do'];
+  };
+
   return (
     <div className="priority-queue-view">
       <h2>All Tasks</h2>
       <div className="task-cards-grid">
-        {tasks.map((task) => {
+        {sortedTasks.map((task) => {
           if (!task) return null;
+          const taskStatus = task.status || 'to-do';
+          const isCompleted = taskStatus === 'completed';
+          const statusInfo = getStatusInfo(taskStatus);
+
           return (
             <button
               key={task._id}
-              className={`task-card-btn priority-${task.priority}`}
+              className={`task-card-btn priority-${task.priority}${isCompleted ? ' completed-task-card' : ''}`}
               tabIndex={0}
               onClick={() => handleCardClick(task._id)}
             >
               <div className="card-header">
-                <h3>{task.title}</h3>
+                <h3 className={isCompleted ? 'completed-title' : ''}>{task.title}</h3>
                 <span className={`priority-badge priority-${task.priority}`}>
                   {task.priority}
                 </span>
+                <select
+                  className={`status-dropdown ${statusInfo.className}`}
+                  value={taskStatus}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    handleStatusChange(task._id, e.target.value);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <option value="to-do">To Do</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
                 <Trash2
                   className="delete-icon"
                   size={20}
@@ -93,13 +140,13 @@ const PriorityQueueView = () => {
                   title="Delete Task"
                 />
               </div>
-              <p className="card-description">{task.description}</p>
+              <p className={`card-description${isCompleted ? ' completed-text' : ''}`}>{task.description}</p>
               <div className="card-details">
-                <p>
+                <p className={isCompleted ? 'completed-text' : ''}>
                   <strong>Priority Score:</strong>{' '}
                   {task.priorityScore ? task.priorityScore.toFixed(2) : 'N/A'}
                 </p>
-                <p>
+                <p className={isCompleted ? 'completed-text' : ''}>
                   <strong>Deadline:</strong>{' '}
                   {new Date(task.deadline).toLocaleString()}
                 </p>
