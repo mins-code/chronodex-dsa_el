@@ -21,8 +21,14 @@ app.use(express.json());
 
 
 // Import and use routes
+console.log('Registering taskRouter at /api/tasks');
 const taskRouter = require('./routes/taskRoutes');
 const authRouter = require('./routes/authRoutes');
+
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
+});
 
 app.use('/api/tasks', taskRouter);
 app.use('/api/auth', authRouter);
@@ -43,9 +49,9 @@ mongoose
     await initializeState();
 
     // Set port and start listening
-    const PORT = process.env.PORT || 5000;
+    const PORT = 5001; // HARDCODED FORCE CHANGE
     app.listen(PORT, () => {
-      console.log(`Server is running on port: ${PORT}`);
+      console.log(`[ANTIGRAVITY] Server LOADED. Running on port: ${PORT}`);
     });
   })
   .catch((err) => console.log('MongoDB connection error:', err));

@@ -5,26 +5,11 @@ const { createTask, completeTask, deleteTask, undoDelete, clearAllTasks, getTask
 const { taskTrie, taskQueue } = require('../state');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// POST / - Create a new task
-router.post('/', createTask);
-
-// PATCH /:taskId/complete - Mark a task as completed
-router.patch('/:taskId/complete', completeTask);
-
-// DELETE /:taskId - Delete a task
-router.delete('/:taskId', deleteTask);
-
-// DELETE /clear - Clear all tasks (protected)
-router.delete('/clear', authMiddleware, clearAllTasks);
-
-// POST /undo - Undo the last deleted task
-router.post('/undo', undoDelete);
-
-// GET / - Fetch all tasks
-router.get('/', getTasks);
+console.log('[DEBUG] taskRoutes.js is being evaluated/loaded');
 
 // GET /priority - Return tasks in the order provided by the PriorityQueue
 router.get('/priority', async (req, res) => {
+  console.log('GET /priority route hit');
   try {
     // Check if the taskQueue is empty
     if (taskQueue.heap.length === 0) {
@@ -74,6 +59,25 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// POST / - Create a new task
+router.post('/', createTask);
+
+// PATCH /:taskId/complete - Mark a task as completed
+router.patch('/:taskId/complete', completeTask);
+
+// DELETE /clear - Clear all tasks (protected)
+// MOVE THIS BEFORE /:taskId to avoid shadowing
+router.delete('/clear', authMiddleware, clearAllTasks);
+
+// DELETE /:taskId - Delete a task
+router.delete('/:taskId', deleteTask);
+
+// POST /undo - Undo the last deleted task
+router.post('/undo', undoDelete);
+
+// GET / - Fetch all tasks
+router.get('/', getTasks);
+
 // GET /:taskId - Fetch a single task by ID
 router.get('/:taskId', async (req, res) => {
   try {
@@ -88,7 +92,6 @@ router.get('/:taskId', async (req, res) => {
   }
 });
 
-// PUT /:taskId - Update a task (for adding dependencies)
 // PUT /:taskId - Update a task
 router.put('/:taskId', updateTask);
 

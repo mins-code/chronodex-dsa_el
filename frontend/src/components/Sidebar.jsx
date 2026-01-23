@@ -39,19 +39,19 @@ const Sidebar = ({ user, onLogout }) => {
       )}
 
       <nav className="sidebar-nav">
-        <NavLink to="/" className="sidebar-link" activeClassName="active">
+        <NavLink to="/" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
           <LayoutDashboard size={20} className="sidebar-icon" />
           Dashboard
         </NavLink>
-        <NavLink to="/create" className="sidebar-link" activeClassName="active">
+        <NavLink to="/create" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
           <PlusCircle size={20} className="sidebar-icon" />
           Create Task
         </NavLink>
-        <NavLink to="/dependencies" className="sidebar-link" activeClassName="active">
+        <NavLink to="/dependencies" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
           <GitBranch size={20} className="sidebar-icon" />
           Dependencies
         </NavLink>
-        <NavLink to="/settings" className="sidebar-link" activeClassName="active">
+        <NavLink to="/settings" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
           <Settings size={20} className="sidebar-icon" />
           Settings
         </NavLink>

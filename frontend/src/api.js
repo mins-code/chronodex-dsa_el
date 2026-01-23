@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create an Axios instance with the base URL
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api', // Backend API base URL
+  baseURL: 'http://localhost:5001/api', // Backend API base URL
 });
 
 // Add auth token to all requests
@@ -18,6 +18,31 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+// Auth functions
+export const registerString = async (userData) => {
+  try {
+    const response = await api.post('/auth/register', userData);
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+        throw new Error(error.response.data.error || 'Registration failed');
+    }
+    throw error;
+  }
+};
+
+export const loginString = async (credentials) => {
+  try {
+    const response = await api.post('/auth/login', credentials);
+    return response.data;
+  } catch (error) {
+      if (error.response && error.response.data) {
+        throw new Error(error.response.data.error || 'Login failed');
+    }
+    throw error;
+  }
+};
 
 // Fetch all tasks
 export const getTasks = async () => {
