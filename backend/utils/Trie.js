@@ -58,4 +58,10 @@ class Trie {
   }
 }
 
+
+const performanceLogger = require('./performanceLogger');
+
+// Wrap the search method with performance logging
+Trie.prototype.search = performanceLogger(Trie.prototype.search, 'Trie.search');
+
 module.exports = Trie;

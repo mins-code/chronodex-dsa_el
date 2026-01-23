@@ -27,6 +27,12 @@ const taskSchema = new Schema(
     duration: {
       type: Number, // in minutes
     },
+    estimatedDuration: {
+      type: Number, // in minutes
+    },
+    actualDuration: {
+      type: Number, // in minutes
+    },
     prerequisites: [
       {
         type: mongoose.Schema.Types.ObjectId,

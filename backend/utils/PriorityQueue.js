@@ -1,4 +1,4 @@
-class MinHeap {
+class PriorityQueue {
   constructor() {
     this.heap = [];
   }
@@ -9,20 +9,20 @@ class MinHeap {
     this._heapifyUp(this.heap.length - 1);
   }
 
-  // Extract the node with the minimum priorityScore
-  extractMin() {
+  // Extract the node with the maximum priorityScore
+  extract() {
     if (this.heap.length === 0) return null;
 
     if (this.heap.length === 1) return this.heap.pop();
 
-    const min = this.heap[0];
+    const max = this.heap[0];
     this.heap[0] = this.heap.pop();
     this._heapifyDown(0);
 
-    return min;
+    return max;
   }
 
-  // Peek at the node with the minimum priorityScore without removing it
+  // Peek at the node with the maximum priorityScore without removing it
   peek() {
     return this.heap.length > 0 ? this.heap[0] : null;
   }
@@ -30,20 +30,31 @@ class MinHeap {
   // Static method to calculate priorityScore
   static calculateScore(deadline, priority) {
     const priorityMap = {
-      Critical: 4,
-      High: 3,
-      Medium: 2,
+      High: 10,
+      Medium: 5,
       Low: 1,
     };
 
+    const priorityWeight = priorityMap[priority] || 1; // Default to Low if unknown
+
     const now = new Date();
-    const timeDifference = Math.max(0, new Date(deadline) - now); // Time difference in milliseconds
-    const daysUntilDeadline = timeDifference / (1000 * 60 * 60 * 24); // Convert to days
+    const deadlineDate = new Date(deadline);
+    // Time difference in hours
+    const hoursUntilDeadline = (deadlineDate - now) / (1000 * 60 * 60);
 
-    const priorityWeight = priorityMap[priority] || 0;
+    let urgencyScore = 0;
+    
+    // If deadline is passed or extremely close (<= 0), assign a very high urgency score
+    // to ensure it bubbles up. 
+    // Using a large cap for 1/0 or negative values.
+    if (hoursUntilDeadline <= 0) {
+      urgencyScore = 1000; 
+    } else {
+      urgencyScore = 1 / hoursUntilDeadline;
+    }
 
-    // Lower score = more urgent (closer deadline and higher priority)
-    return daysUntilDeadline / priorityWeight;
+    // Score = (PriorityWeight) + (1 / HoursUntilDeadline)
+    return priorityWeight + urgencyScore;
   }
 
   // Helper method to maintain heap property after insertion
@@ -52,7 +63,7 @@ class MinHeap {
 
     while (
       index > 0 &&
-      this.heap[index].priorityScore < this.heap[parentIndex].priorityScore
+      this.heap[index].priorityScore > this.heap[parentIndex].priorityScore
     ) {
       [this.heap[index], this.heap[parentIndex]] = [
         this.heap[parentIndex],
@@ -65,32 +76,32 @@ class MinHeap {
 
   // Helper method to maintain heap property after extraction
   _heapifyDown(index) {
-    let smallest = index;
+    let largest = index;
     const leftChild = 2 * index + 1;
     const rightChild = 2 * index + 2;
 
     if (
       leftChild < this.heap.length &&
-      this.heap[leftChild].priorityScore < this.heap[smallest].priorityScore
+      this.heap[leftChild].priorityScore > this.heap[largest].priorityScore
     ) {
-      smallest = leftChild;
+      largest = leftChild;
     }
 
     if (
       rightChild < this.heap.length &&
-      this.heap[rightChild].priorityScore < this.heap[smallest].priorityScore
+      this.heap[rightChild].priorityScore > this.heap[largest].priorityScore
     ) {
-      smallest = rightChild;
+      largest = rightChild;
     }
 
-    if (smallest !== index) {
-      [this.heap[index], this.heap[smallest]] = [
-        this.heap[smallest],
+    if (largest !== index) {
+      [this.heap[index], this.heap[largest]] = [
+        this.heap[largest],
         this.heap[index],
       ];
-      this._heapifyDown(smallest);
+      this._heapifyDown(largest);
     }
   }
 }
 
-module.exports = MinHeap;
+module.exports = PriorityQueue;

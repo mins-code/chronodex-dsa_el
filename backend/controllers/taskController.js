@@ -243,4 +243,94 @@ const clearAllTasks = async (req, res) => {
   }
 };
 
-module.exports = { createTask, completeTask, deleteTask, undoDelete, clearAllTasks };
+const { calculateTimeDeviation } = require('../utils/UserPatternAnalyzer');
+
+const getTasks = async (req, res) => {
+  try {
+    const tasks = await Task.find();
+    
+    // Calculate deviation based on pattern analysis
+    // Assuming userId is available in req.user set by auth middleware (or passed contextually)
+    // Using a placeholder or null if user context isn't fully established for pattern analysis yet
+    const userId = req.user ? req.user._id : null; 
+    
+    const deviationPercentage = await calculateTimeDeviation(userId);
+    
+    // Structure response with tasks and suggestion
+    res.status(200).json({
+      tasks: tasks,
+      suggestedBufferTime: deviationPercentage // percentage, e.g. 20 for 20%
+    });
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    res.status(500).json({ error: 'An error occurred while fetching tasks.' });
+  }
+};
+
+const updateTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const updates = req.body;
+
+    delete updates._id;
+
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found.' });
+    }
+
+    // 1. Handle Priority/Deadline updates (Recalculate Score)
+    if (
+      (updates.deadline && updates.deadline !== task.deadline) ||
+      (updates.priority && updates.priority !== task.priority)
+    ) {
+      const newDeadline = updates.deadline || task.deadline;
+      const newPriority = updates.priority || task.priority;
+
+      const newScore = PriorityQueue.calculateScore(newDeadline, newPriority);
+      updates.priorityScore = newScore;
+
+      // Update PriorityQueue
+      taskQueue.heap = taskQueue.heap.filter(
+        (node) => node.taskId && node.taskId.toString() !== taskId.toString()
+      );
+      taskQueue.insert({ taskId: taskId, priorityScore: newScore });
+    }
+
+    // 2. Handle Title updates (Trie)
+    if (updates.title && updates.title !== task.title) {
+      taskTrie.insert(task.title, null);
+      taskTrie.insert(updates.title, taskId);
+    }
+
+    const updatedTask = await Task.findByIdAndUpdate(taskId, updates, {
+      new: true,
+    });
+
+    // 4. Handle IntervalScheduler updates
+    if (
+        (updates.deadline && updates.deadline !== task.deadline) || 
+        (updates.duration && updates.duration !== task.duration)
+    ) {
+        intervalScheduler.intervals = intervalScheduler.intervals.filter(
+            ([, , id]) => id && id.toString() !== taskId.toString()
+        );
+        
+        const finalDeadline = updates.deadline || task.deadline;
+        const finalDuration = updates.duration || task.duration;
+        
+        if (finalDeadline && finalDuration) {
+            const startTime = new Date(finalDeadline).getTime() - finalDuration * 60 * 1000;
+            const endTime = new Date(finalDeadline).getTime();
+            intervalScheduler.addInterval(startTime, endTime, taskId);
+        }
+    }
+
+    res.status(200).json(updatedTask);
+  } catch (error) {
+    console.error('Error updating task:', error);
+    res.status(500).json({ error: 'Failed to update task.' });
+  }
+};
+
+module.exports = { createTask, completeTask, deleteTask, undoDelete, clearAllTasks, getTasks, updateTask };

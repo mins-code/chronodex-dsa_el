@@ -17,8 +17,8 @@ const DependencyGraphView = () => {
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const allTasks = await getTasks();
-      setTasks(allTasks);
+      const response = await getTasks();
+      setTasks(response.tasks || []);
     } catch (error) {
       setTasks([]);
     } finally {

@@ -62,6 +62,44 @@ class DirectedGraph {
       completedTaskIds.includes(prerequisite)
     );
   }
+
+  // Resolve the execution order of tasks (Topological Sort)
+  resolve() {
+    const visited = new Set();
+    const stack = [];
+
+    const tSort = (node) => {
+      visited.add(node);
+
+      const neighbors = this.adjacencyList.get(node) || [];
+      for (const neighbor of neighbors) {
+        if (!visited.has(neighbor)) {
+          tSort(neighbor);
+        }
+      }
+
+      stack.push(node);
+    };
+
+    for (const node of this.adjacencyList.keys()) {
+      if (!visited.has(node)) {
+        tSort(node);
+      }
+    }
+
+    // Stack has dependencies at the bottom (pushed last if we consider post-order of DFS on graph where edges are dependencies)
+    // Wait, with A->B (A is prereq):
+    // Visit A -> Call tSort(B) -> Visit B -> B has no neighbors -> Push B -> Return -> Push A.
+    // Stack: [B, A]. 
+    // We want A then B.
+    // So we need to reverse the stack.
+    return stack.reverse();
+  }
 }
 
 module.exports = DirectedGraph;
+
+const performanceLogger = require('./performanceLogger');
+
+// Wrap the resolve method with performance logging
+DirectedGraph.prototype.resolve = performanceLogger(DirectedGraph.prototype.resolve, 'DependencyGraph.resolve');

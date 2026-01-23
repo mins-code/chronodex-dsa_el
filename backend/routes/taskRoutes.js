@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task');
-const { createTask, completeTask, deleteTask, undoDelete, clearAllTasks } = require('../controllers/taskController');
+const { createTask, completeTask, deleteTask, undoDelete, clearAllTasks, getTasks, updateTask } = require('../controllers/taskController');
 const { taskTrie, taskQueue } = require('../state');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -21,15 +21,7 @@ router.delete('/clear', authMiddleware, clearAllTasks);
 router.post('/undo', undoDelete);
 
 // GET / - Fetch all tasks
-router.get('/', async (req, res) => {
-  try {
-    const tasks = await Task.find();
-    res.status(200).json(tasks);
-  } catch (error) {
-    console.error('Error fetching tasks:', error);
-    res.status(500).json({ error: 'An error occurred while fetching tasks.' });
-  }
-});
+router.get('/', getTasks);
 
 // GET /priority - Return tasks in the order provided by the PriorityQueue
 router.get('/priority', async (req, res) => {
@@ -43,7 +35,7 @@ router.get('/priority', async (req, res) => {
     const tempQueue = [...taskQueue.heap]; // Create a temporary copy of the heap
 
     // Sort the temporary queue by priorityScore to preserve the original queue
-    tempQueue.sort((a, b) => a.priorityScore - b.priorityScore);
+    tempQueue.sort((a, b) => b.priorityScore - a.priorityScore);
 
     // Iterate through the sorted temporary queue
     while (tempQueue.length > 0) {
@@ -97,19 +89,8 @@ router.get('/:taskId', async (req, res) => {
 });
 
 // PUT /:taskId - Update a task (for adding dependencies)
-router.put('/:taskId', async (req, res) => {
-  try {
-    const { prerequisites } = req.body;
-    const updatedTask = await Task.findByIdAndUpdate(
-      req.params.taskId,
-      { prerequisites },
-      { new: true }
-    );
-    res.status(200).json(updatedTask);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update task.' });
-  }
-});
+// PUT /:taskId - Update a task
+router.put('/:taskId', updateTask);
 
 // PATCH /:taskId - Update task status
 router.patch('/:taskId', async (req, res) => {

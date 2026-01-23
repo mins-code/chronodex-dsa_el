@@ -23,7 +23,11 @@ api.interceptors.request.use(
 export const getTasks = async () => {
   try {
     const response = await api.get('/tasks');
-    return response.data;
+    // Handle both new structure { tasks, suggestedBufferTime } and old structure [tasks]
+    if (response.data && response.data.tasks) {
+      return response.data; // Return the full object so components can access suggestedBufferTime
+    }
+    return { tasks: response.data, suggestedBufferTime: 0 }; // Normalize to new structure
   } catch (error) {
     console.error('Error fetching tasks:', error);
     throw error;
