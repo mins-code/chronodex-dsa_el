@@ -17,7 +17,7 @@ const Settings = ({ user, onLogout }) => {
 
     const dataStructures = [
         { name: 'Trie (Search)', description: 'Fast task title search', status: 'Active' },
-        { name: 'Min-Heap (Priority Queue)', description: 'Task prioritization', status: 'Active' },
+        { name: 'Max-Heap (Priority Queue)', description: 'Task prioritization', status: 'Active' },
         { name: 'Graph (Dependencies)', description: 'Task dependency tracking', status: 'Active' },
         { name: 'Stack (Undo)', description: 'Delete operation history', status: 'Active' },
         { name: 'Interval Scheduler', description: 'Conflict detection', status: 'Active' },
