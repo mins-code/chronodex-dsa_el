@@ -56,7 +56,7 @@ const Settings = ({ user, onLogout }) => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/auth/change-password', {
+            const response = await fetch('http://localhost:5001/api/auth/change-password', {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ const Settings = ({ user, onLogout }) => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/tasks/clear', {
+            const response = await fetch('http://localhost:5001/api/tasks/clear', {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,

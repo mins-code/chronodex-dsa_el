@@ -48,7 +48,7 @@ const DependencyGraphView = () => {
         ? Array.from(new Set([...depTask.prerequisites, prerequisite]))
         : [prerequisite];
       // Update the task in the backend
-      await fetch(`http://localhost:5000/api/tasks/${dependent}`, {
+      await fetch(`http://localhost:5001/api/tasks/${dependent}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prerequisites: newPrereqs }),
