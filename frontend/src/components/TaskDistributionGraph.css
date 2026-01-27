@@ -1,0 +1,257 @@
+.distribution-graph {
+  background: linear-gradient(135deg, rgba(30, 30, 40, 0.95), rgba(20, 20, 30, 0.95));
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(147, 51, 234, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.distribution-graph.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #9ca3af;
+}
+
+.graph-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  color: #e5e7eb;
+}
+
+.graph-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.graph-header svg {
+  color: #9333ea;
+}
+
+.graph-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  min-height: 300px;
+}
+
+.y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  min-width: 25px;
+}
+
+.y-label {
+  text-align: right;
+}
+
+.bars-container {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-left: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.bar-wrapper.today .bar {
+  border: 2px solid #9333ea;
+  box-shadow: 0 0 15px rgba(147, 51, 234, 0.5);
+}
+
+.bar-wrapper.today .bar-label {
+  color: #a78bfa;
+  font-weight: 700;
+}
+
+.bar {
+  width: 100%;
+  min-height: 4px;
+  background: #374151;
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 0.25rem;
+}
+
+.bar:hover {
+  transform: translateY(-4px);
+  filter: brightness(1.2);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);
+}
+
+.bar .count {
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  position: absolute;
+  top: -20px;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: rgba(20, 20, 30, 0.98);
+  border: 1px solid rgba(147, 51, 234, 0.4);
+  border-radius: 8px;
+  padding: 0.75rem;
+  color: #e5e7eb;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(147, 51, 234, 0.4);
+}
+
+.bar:hover .tooltip {
+  opacity: 1;
+}
+
+.tooltip strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #a78bfa;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.25rem;
+}
+
+.tooltip .critical {
+  color: #fca5a5;
+}
+
+.tooltip .high {
+  color: #fcd34d;
+}
+
+.tooltip .medium {
+  color: #93c5fd;
+}
+
+.tooltip .low {
+  color: #d1d5db;
+}
+
+.bar-label {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  line-height: 1.2;
+}
+
+.bar-label .day-name {
+  font-weight: 600;
+  color: #d1d5db;
+}
+
+.bar-label .date {
+  font-size: 0.7rem;
+}
+
+.graph-legend {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #d1d5db;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.legend-color.critical {
+  background: #ef4444;
+}
+
+.legend-color.high {
+  background: #fbbf24;
+}
+
+.legend-color.medium {
+  background: #60a5fa;
+}
+
+.legend-color.low {
+  background: #6b7280;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .bars-container {
+    gap: 0.25rem;
+  }
+  
+  .bar-label .date {
+    display: none;
+  }
+  
+  .graph-header h3 {
+    font-size: 1rem;
+  }
+  
+  .tooltip {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .distribution-graph {
+    padding: 1rem;
+  }
+  
+  .graph-container {
+    min-height: 200px;
+  }
+  
+  .bar-label .day-name {
+    font-size: 0.65rem;
+  }
+}

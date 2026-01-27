@@ -7,6 +7,63 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 console.log('[DEBUG] taskRoutes.js is being evaluated/loaded');
 
+// GET /distribution - Return task counts grouped by date
+router.get('/distribution', async (req, res) => {
+  try {
+    const days = parseInt(req.query.days) || 14;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(now);
+    endDate.setDate(endDate.getDate() + days);
+    
+    // Fetch all tasks within the date range
+    const tasks = await Task.find({
+      deadline: {
+        $gte: now,
+        $lt: endDate
+      }
+    });
+    
+    // Group tasks by date
+    const distribution = {};
+    
+    for (let i = 0; i < days; i++) {
+      const currentDate = new Date(now);
+      currentDate.setDate(currentDate.getDate() + i);
+      const dateKey = currentDate.toISOString().split('T')[0];
+      
+      distribution[dateKey] = {
+        total: 0,
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0
+      };
+    }
+    
+    // Count tasks by date and priority
+    tasks.forEach(task => {
+      const taskDate = new Date(task.deadline);
+      taskDate.setHours(0, 0, 0, 0);
+      const dateKey = taskDate.toISOString().split('T')[0];
+      
+      if (distribution[dateKey]) {
+        distribution[dateKey].total++;
+        const priority = (task.priority || 'Low').toLowerCase();
+        if (distribution[dateKey][priority] !== undefined) {
+          distribution[dateKey][priority]++;
+        }
+      }
+    });
+    
+    res.status(200).json(distribution);
+  } catch (error) {
+    console.error('Error fetching task distribution:', error);
+    res.status(500).json({ error: 'An error occurred while fetching task distribution.' });
+  }
+});
+
 // GET /priority - Return tasks in the order provided by the PriorityQueue
 router.get('/priority', async (req, res) => {
   console.log('GET /priority route hit');

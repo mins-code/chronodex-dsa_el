@@ -24,6 +24,7 @@ app.use(express.json());
 console.log('Registering taskRouter at /api/tasks');
 const taskRouter = require('./routes/taskRoutes');
 const authRouter = require('./routes/authRoutes');
+const notificationRouter = require('./routes/notificationRoutes');
 
 app.use((req, res, next) => {
   console.log(`Incoming request: ${req.method} ${req.url}`);
@@ -32,6 +33,7 @@ app.use((req, res, next) => {
 
 app.use('/api/tasks', taskRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/notifications', notificationRouter);
 
 // A simple route to test if the server is working
 app.get('/', (req, res) => {

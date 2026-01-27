@@ -136,6 +136,48 @@ export const deleteTask = async (id) => {
   }
 };
 
+// Notification functions
+export const getRecentCreations = async () => {
+  try {
+    const response = await api.get('/notifications/recent-creations');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching recent creations:', error);
+    throw error;
+  }
+};
+
+export const getUpcomingDeadlines = async () => {
+  try {
+    const response = await api.get('/notifications/upcoming-deadlines');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching upcoming deadlines:', error);
+    throw error;
+  }
+};
+
+export const getRecentCompletions = async () => {
+  try {
+    const response = await api.get('/notifications/recent-completions');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching recent completions:', error);
+    throw error;
+  }
+};
+
+// Get task distribution by date
+export const getTaskDistribution = async (days = 14) => {
+  try {
+    const response = await api.get(`/tasks/distribution?days=${days}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching task distribution:', error);
+    throw error;
+  }
+};
+
 // Fetch a single task by ID
 export const getTaskById = async (id) => {
   try {

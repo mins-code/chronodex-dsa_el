@@ -102,6 +102,22 @@
   margin: 0;
 }
 
+/* Notifications */
+.notifications {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  min-height: calc(100vh - 150px);
+}
+
+.notifications h2 {
+  color: #f3f4f6;
+  padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+  margin: 0;
+  font-size: 1.75rem;
+}
+
 /* Settings */
 .settings {
   text-align: center;

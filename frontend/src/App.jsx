@@ -5,6 +5,8 @@ import TaskSearch from './components/TaskSearch';
 import PriorityQueueView from './components/PriorityQueueView';
 import TaskForm from './components/TaskForm';
 import DependencyGraphView from './components/DependencyGraphView';
+import Notifications from './components/Notifications';
+import TaskDistributionGraph from './components/TaskDistributionGraph';
 import TaskDetailCard from './components/TaskDetailCard';
 import Login from './components/Login';
 import Signup from './components/Signup';
@@ -74,6 +76,7 @@ function App() {
                       path="/"
                       element={
                         <div className="dashboard">
+                          <TaskDistributionGraph />
                           <TaskSearch />
                           <PriorityQueueView />
                         </div>
@@ -98,6 +101,17 @@ function App() {
                         <div className="dependencies">
                           <h2>Dependency View</h2>
                           <DependencyGraphView />
+                        </div>
+                      }
+                    />
+
+                    {/* Notifications Route */}
+                    <Route
+                      path="/notifications"
+                      element={
+                        <div className="notifications">
+                          <h2>Notifications</h2>
+                          <Notifications />
                         </div>
                       }
                     />

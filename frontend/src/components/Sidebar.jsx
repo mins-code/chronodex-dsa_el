@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, GitBranch, Settings, LogOut, User } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, GitBranch, Bell, Settings, LogOut, User } from 'lucide-react';
 import { undoDelete } from '../api';
 import './Sidebar.css';
 
@@ -50,6 +50,10 @@ const Sidebar = ({ user, onLogout }) => {
         <NavLink to="/dependencies" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
           <GitBranch size={20} className="sidebar-icon" />
           Dependencies
+        </NavLink>
+        <NavLink to="/notifications" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+          <Bell size={20} className="sidebar-icon" />
+          Notifications
         </NavLink>
         <NavLink to="/settings" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
           <Settings size={20} className="sidebar-icon" />
