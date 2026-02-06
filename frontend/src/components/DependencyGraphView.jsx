@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getTasks, completeTask } from '../api';
+import { getTasks, completeTask, updateTask } from '../api';
 import './DependencyGraphView.css';
 
 const DependencyGraphView = () => {
@@ -47,12 +47,10 @@ const DependencyGraphView = () => {
       const newPrereqs = depTask.prerequisites
         ? Array.from(new Set([...depTask.prerequisites, prerequisite]))
         : [prerequisite];
-      // Update the task in the backend
-      await fetch(`http://localhost:5001/api/tasks/${dependent}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prerequisites: newPrereqs }),
-      });
+
+      // Update the task in the backend using the authenticated API wrapper
+      await updateTask(dependent, { prerequisites: newPrereqs });
+
       setAddSuccess('Dependency added!');
       setDependent('');
       setPrerequisite('');

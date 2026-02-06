@@ -1,3 +1,6 @@
+/* Import Professional Fonts - Academic Control Room Theme */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -5,110 +8,323 @@
 }
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Deep Academic Control Room Theme - Enhanced Variables */
+  --glass-bg: rgba(15, 23, 42, 0.65);
+  --glass-border: rgba(120, 180, 255, 0.12);
+  --accent-blue: #38bdf8;
+
+  /* Background gradient colors */
+  --bg-navy-dark: #070B18;
+  --bg-navy-mid: #0A1024;
+  --bg-midnight: #0E1A2F;
+  --bg-cyan-muted: #0F2F3A;
+
+  /* Text colors */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  /* Typography */
+  --font-heading: 'Orbitron', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  /* Font settings */
+  font-family: var(--font-body);
   line-height: 1.5;
   font-weight: 400;
-  color: #333;
-  background-color: #f5f5f5;
+  color: var(--text-primary);
+
+  /* Rendering optimizations */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #007bff;
-  text-decoration: none;
-}
-
-a:hover {
-  color: #0056b3;
-}
-
+/* Multi-Layered Background System - Deep Academic Control Room */
 body {
   margin: 0;
   padding: 0;
   width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  background-color: #f5f5f5;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  position: relative;
+
+  /* Base layer - Near-black navy to midnight blue radial gradient */
+  background: radial-gradient(ellipse at top, var(--bg-navy-mid) 0%, var(--bg-navy-dark) 100%);
+}
+
+/* Layer 2 - Diagonal linear gradient with muted cyan */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg,
+      transparent 0%,
+      rgba(14, 26, 47, 0.6) 30%,
+      rgba(15, 47, 58, 0.4) 70%,
+      transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Layer 3 - Subtle glow pockets for depth */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(56, 189, 248, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(15, 47, 58, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(14, 26, 47, 0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 #root {
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* Professional Typography Scale - Academic Control Room */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* App Name / Logo Typography */
+.app-name,
+.auth-header h1 {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
 }
 
 h1 {
   font-size: 2.5em;
   line-height: 1.1;
   margin: 0;
+  font-weight: 700;
 }
 
 h2 {
-  font-size: 1.8em;
+  font-size: 1.5rem;
   margin-top: 0;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
+h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+h4 {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* Body Text */
+p,
+span,
+div {
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+}
+
+/* Labels and Metadata */
+label,
+.label,
+.metadata {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+/* Links */
+a {
+  font-weight: 500;
+  color: var(--accent-blue);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #7dd3fc;
+}
+
+/* Buttons */
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: 1px solid var(--glass-border);
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #007bff;
-  color: white;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text-primary);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
 }
 
 button:hover {
-  background-color: #0056b3;
+  background: rgba(56, 189, 248, 0.2);
+  border-color: var(--accent-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
 }
 
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
 }
 
-/* Input fields */
+button:active {
+  transform: translateY(0);
+}
+
+/* Input fields with glassmorphism */
 input,
 textarea,
 select {
-  background-color: #ffffff;
-  color: #333;
-  border: 1px solid #ddd;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
   padding: 0.75rem;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
+  transition: all 0.3s ease;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #999;
+  color: var(--text-muted);
 }
 
 input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+  background: rgba(15, 23, 42, 0.85);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+/* Scrollbar styling for Deep Space theme */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-gradient-start);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.3);
+  border-color: var(--accent-blue);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-bg) var(--bg-gradient-start);
+}
+
+/* Global Thin Scrollbars - High-Tech Style */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
+}
+
+/* Pop-and-Fade Modal Animation */
+@keyframes popAndFade {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
   }
-  a:hover {
-    color: #747bff;
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+/* Modal Overlay with Blur */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  animation: popAndFade 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }

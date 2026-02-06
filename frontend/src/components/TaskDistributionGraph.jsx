@@ -60,11 +60,11 @@ const TaskDistributionGraph = () => {
   if (loading) return <div className="distribution-graph loading">Loading...</div>;
 
   return (
-    <div className="distribution-graph line-chart-mode">
+    <div className="distribution-graph line-chart-mode glass-tile">
       <div className="graph-header">
         <div>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <TrendingUp size={20} color="#a855f7" />
+            <TrendingUp size={20} color="#38bdf8" />
             Task Flow
           </h3>
           <span className="subtitle">Next 14 Days Forecast</span>
@@ -75,12 +75,12 @@ const TaskDistributionGraph = () => {
         <svg viewBox={`0 0 ${width} ${height}`} className="line-chart-svg">
           <defs>
             <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#9333ea" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#9333ea" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.0" />
             </linearGradient>
             <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#c084fc" />
-              <stop offset="100%" stopColor="#a855f7" />
+              <stop offset="0%" stopColor="#7dd3fc" />
+              <stop offset="100%" stopColor="#38bdf8" />
             </linearGradient>
           </defs>
 
@@ -132,14 +132,15 @@ const TaskDistributionGraph = () => {
               )}
 
               {/* Tooltip (SVG foreignObject or simple SVG implementation) */}
-              <foreignObject x={p.x - 85} y={p.y - 120} width="170" height="110" className="svg-tooltip-wrapper">
+              <foreignObject x={p.x - 85} y={p.y - 160} width="170" height="150" className="svg-tooltip-wrapper">
                 <div className="chart-tooltip">
                   <div className="tooltip-date">{formatDate(p.date, true)}</div>
                   <div className="tooltip-total">{p.counts.total} Tasks</div>
                   <div className="tooltip-breakdown">
                     <div className="breakdown-item"><span className="dot crit"></span> {p.counts.critical || 0} Critical</div>
                     <div className="breakdown-item"><span className="dot high"></span> {p.counts.high || 0} High</div>
-                    <div className="breakdown-item"><span className="dot med"></span> {p.counts.medium || 0} Med</div>
+                    <div className="breakdown-item"><span className="dot med"></span> {p.counts.medium || 0} Medium</div>
+                    <div className="breakdown-item"><span className="dot low"></span> {p.counts.low || 0} Low</div>
                   </div>
                 </div>
               </foreignObject>

@@ -28,7 +28,7 @@ const TaskDetailCard = () => {
 
   return (
     <div className="task-detail-center">
-      <div className={`task-detail-card priority-${task.priority}`}>
+      <div className={`task-detail-card glass-card priority-${task.priority}`}>
         <h2>{task.title}</h2>
         <p>{task.description}</p>
         <div className="task-detail-info">

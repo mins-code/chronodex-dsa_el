@@ -65,7 +65,7 @@ const TaskSearch = () => {
                     onClick={() => handleResultClick(task._id, task.title)}
                   >
                     <strong>{task.title}</strong>
-                    <span className="result-priority">{task.priority}</span>
+                    <span className={`result-priority priority-${task.priority}`}>{task.priority}</span>
                   </li>
                 ))}
               </ul>

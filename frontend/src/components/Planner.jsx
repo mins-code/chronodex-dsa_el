@@ -8,10 +8,11 @@ import ReactFlow, {
     Background,
     MiniMap,
     Panel,
+    ControlButton,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { getTasks } from '../api'; // Ensure this path is correct
-import { Workflow, GripVertical, Save } from 'lucide-react';
+import { Workflow, GripVertical, Save, Trash2, Maximize } from 'lucide-react';
 import './Planner.css';
 
 const flowKey = 'chronodex-planner-flow';
@@ -23,6 +24,49 @@ const Planner = () => {
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isDraggingNode, setIsDraggingNode] = useState(false);
+    const trashZoneRef = useRef(null);
+
+    // Clear Layout Handler
+    const onClear = useCallback(() => {
+        if (window.confirm('Are you sure you want to clear the entire layout?')) {
+            setNodes([]);
+            setEdges([]);
+            localStorage.removeItem(flowKey);
+        }
+    }, [setNodes, setEdges]);
+
+    // Node Drag Stop Handler (for deletion)
+    const onNodeDragStop = useCallback((event, node) => {
+        setIsDraggingNode(false);
+
+        // Simple bounding box check for the trash zone
+        const trashZone = trashZoneRef.current;
+        if (trashZone) {
+            const trashRect = trashZone.getBoundingClientRect();
+            const { clientX, clientY } = event;
+
+            if (
+                clientX >= trashRect.left &&
+                clientX <= trashRect.right &&
+                clientY >= trashRect.top &&
+                clientY <= trashRect.bottom
+            ) {
+                // Delete node
+                setNodes((nds) => nds.filter((n) => n.id !== node.id));
+                setEdges((eds) => eds.filter((e) => e.source !== node.id && e.target !== node.id));
+            }
+        }
+    }, [setNodes, setEdges]);
+
+    // Node Drag Start Handler (to highlight trash zone)
+    // Note: ReactFlow doesn't prompt onNodeDragStart by default in controls, need to add if strictly required visual feedback
+    // but we can use onNodeDrag as well if needed. For now simplest is css hover on zone, but we can toggle global drag state
+    // if we hook into onNodeDragStart property of ReactFlow comp.
+
+    const onNodeDragStart = useCallback(() => {
+        setIsDraggingNode(true);
+    }, []);
 
     // Load graph from local storage on init
     useEffect(() => {
@@ -118,6 +162,17 @@ const Planner = () => {
         [reactFlowInstance, nodes, setNodes],
     );
 
+    // Fullscreen Toggle Handler
+    const toggleFullScreen = () => {
+        if (!document.fullscreenElement) {
+            reactFlowWrapper.current.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
     return (
         <div className="planner-container">
             {/* Canvas Area (Left) */}
@@ -132,27 +187,60 @@ const Planner = () => {
                         onInit={setReactFlowInstance}
                         onDrop={onDrop}
                         onDragOver={onDragOver}
+                        onNodeDragStop={onNodeDragStop}
+                        onNodeDragStart={onNodeDragStart}
                         fitView
                     >
-                        <Controls />
+                        <Controls>
+                            <ControlButton onClick={toggleFullScreen} title="Toggle Fullscreen">
+                                <Maximize size={12} />
+                            </ControlButton>
+                        </Controls>
                         <Background color="#aaa" gap={16} />
-                        <MiniMap style={{ background: '#1f2937' }} nodeColor="#9333ea" />
+                        <MiniMap style={{ background: 'rgba(15, 23, 42, 0.8)' }} nodeColor="#38bdf8" />
                         <Panel position="top-right">
                             <div className="panel-controls" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <button className="clear-btn" onClick={onClear} style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    background: 'rgba(239, 68, 68, 0.2)',
+                                    border: '1px solid rgba(239, 68, 68, 0.5)',
+                                    color: '#fca5a5',
+                                    padding: '8px 12px',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    backdropFilter: 'blur(10px)'
+                                }}>
+                                    <Trash2 size={16} /> Clear Layout
+                                </button>
                                 <button className="save-btn" onClick={onSave} style={{
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '5px',
-                                    background: '#7c3aed',
+                                    background: 'linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%)',
                                     border: 'none',
                                     color: 'white',
-                                    padding: '5px 10px',
-                                    borderRadius: '5px',
-                                    cursor: 'pointer'
+                                    padding: '8px 12px',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)'
                                 }}>
-                                    <Save size={14} /> Save Layout
+                                    <Save size={16} /> Save Layout
                                 </button>
-                                <div style={{ color: '#ccc', fontSize: '12px' }}>Drag tasks from sidebar</div>
+                            </div>
+                        </Panel>
+
+                        {/* Trash Zone */}
+                        <Panel position="bottom-center">
+                            <div
+                                className={`trash-zone ${isDraggingNode ? 'active' : ''}`}
+                                ref={trashZoneRef}
+                            >
+                                <Trash2 size={24} />
+                                <span>Drag here to remove</span>
                             </div>
                         </Panel>
                     </ReactFlow>

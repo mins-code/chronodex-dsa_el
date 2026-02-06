@@ -4,22 +4,25 @@
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background-color: #f5f5f5;
+  background: transparent;
 }
 
-/* Sidebar */
+/* Sidebar with glassmorphism */
 .sidebar {
   flex: 0 0 250px;
   height: 100vh;
-  background-color: #1a1a1a;
-  color: #f0f0f0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid var(--glass-border);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: fixed;
   left: 0;
   top: 0;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
   z-index: 1000;
   overflow-y: auto;
 }
@@ -27,24 +30,30 @@
 /* Main Content */
 .main-content {
   flex: 1;
-  margin-left: 250px;
-  padding: 30px;
-  background-color: #f5f5f5;
-  color: #333;
+  margin-left: calc(250px + 2rem);
+  padding: 40px 50px;
+  background: transparent;
+  color: var(--text-primary);
   overflow-y: auto;
   height: 100vh;
   box-sizing: border-box;
   position: relative;
 }
 
-/* Header */
+/* Header with glassmorphism accent */
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
-  border-bottom: 2px solid #ddd;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--glass-border);
   padding-bottom: 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
 }
 
 .title-group {
@@ -54,13 +63,14 @@
 .title-group h1 {
   margin: 0;
   font-size: 2.5rem;
-  color: #333;
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .subtitle {
   margin: 5px 0 0 0;
   font-size: 1rem;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 /* Global Undo Button */
@@ -71,16 +81,20 @@
 .global-undo button {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .global-undo button:hover {
-  background-color: #0056b3;
+  background: rgba(56, 189, 248, 0.2);
+  border-color: var(--accent-blue);
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
 }
 
 /* Dashboard */
@@ -102,26 +116,32 @@
   margin: 0;
 }
 
-/* Notifications */
+/* Notifications with Deep Space theme */
 .notifications {
   margin: 0;
   padding: 0;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   min-height: calc(100vh - 150px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .notifications h2 {
-  color: #f3f4f6;
+  color: var(--text-primary);
   padding: 1.5rem 1.5rem 0.5rem 1.5rem;
   margin: 0;
   font-size: 1.75rem;
+  font-weight: 600;
 }
 
 /* Settings */
 .settings {
   text-align: center;
   margin-top: 50px;
+  color: var(--text-primary);
 }
 
 /* Responsive Design */

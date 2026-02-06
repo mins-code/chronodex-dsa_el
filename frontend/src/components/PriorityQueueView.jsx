@@ -18,7 +18,8 @@ const PriorityQueueView = () => {
     setLoading(true);
     try {
       const priorityTasks = await getPriorityTasks();
-      setTasks(priorityTasks || []);
+      // Ensure priorityTasks is an array before setting state
+      setTasks(Array.isArray(priorityTasks) ? priorityTasks : []);
     } catch (error) {
       setTasks([]);
     } finally {

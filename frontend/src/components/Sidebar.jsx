@@ -26,6 +26,10 @@ const Sidebar = ({ user, onLogout }) => {
 
   return (
     <div className="sidebar">
+      <div className="sidebar-header">
+        <h2 className="app-name">ChronoDeX</h2>
+      </div>
+
       {user && (
         <div className="sidebar-user">
           <div className="user-avatar">

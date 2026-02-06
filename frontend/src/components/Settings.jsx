@@ -211,53 +211,7 @@ const Settings = ({ user, onLogout }) => {
                 </div>
             </section>
 
-            {/* System Diagnostics Section */}
-            <section className="settings-section">
-                <div className="section-header">
-                    <ShieldCheck size={24} />
-                    <h2>System Diagnostics</h2>
-                </div>
-
-                <div className="diagnostics-card">
-                    <h3>
-                        <Database size={20} />
-                        Data Structure Integrity Check
-                    </h3>
-
-                    <div className="ds-list">
-                        {dataStructures.map((ds, index) => (
-                            <div key={index} className="ds-item">
-                                <div className="ds-info">
-                                    <h4>{ds.name}</h4>
-                                    <p>{ds.description}</p>
-                                </div>
-                                <span className="status-badge active">
-                                    <CheckCircle size={16} />
-                                    {ds.status}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="system-actions">
-                        <button
-                            className="reset-button"
-                            onClick={handleSystemReset}
-                            disabled={loading}
-                        >
-                            <Trash2 size={18} />
-                            {loading ? 'Resetting...' : 'System Reset'}
-                        </button>
-                    </div>
-
-                    {message && (
-                        <div className={`message ${message.startsWith('✓') ? 'success' : 'error'}`}>
-                            {message}
-                        </div>
-                    )}
-                </div>
-            </section>
-        </div>
+        </div >
     );
 };
 

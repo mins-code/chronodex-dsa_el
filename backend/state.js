@@ -51,9 +51,9 @@ module.exports = {
         }
       });
 
-      // Merge intervals
-      intervalScheduler.mergeIntervals();
-      
+      // mergeIntervals removed to preserve task IDs for deletion and conflict checking
+      // intervalScheduler.mergeIntervals();
+
       console.log('In-memory state initialized successfully with ' + tasks.length + ' tasks.');
     } catch (error) {
       console.error('Error initializing state:', error);

@@ -7,32 +7,39 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 console.log('[DEBUG] taskRoutes.js is being evaluated/loaded');
 
-// GET /distribution - Return task counts grouped by date
-router.get('/distribution', async (req, res) => {
+// GET /distribution - Return task counts grouped by date (protected)
+router.get('/distribution', authMiddleware, async (req, res) => {
   try {
     const days = parseInt(req.query.days) || 14;
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    
+
     const endDate = new Date(now);
     endDate.setDate(endDate.getDate() + days);
-    
-    // Fetch all tasks within the date range
+
+    // Fetch all tasks for this user within the date range
     const tasks = await Task.find({
+      userId: req.userId,
       deadline: {
         $gte: now,
         $lt: endDate
       }
     });
-    
+
+    // Group tasks by date
     // Group tasks by date
     const distribution = {};
-    
+
     for (let i = 0; i < days; i++) {
-      const currentDate = new Date(now);
-      currentDate.setDate(currentDate.getDate() + i);
-      const dateKey = currentDate.toISOString().split('T')[0];
-      
+      // Use local time construction to match user's perspective
+      const currentDate = new Date();
+      currentDate.setDate(now.getDate() + i);
+
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      const dateKey = `${year}-${month}-${day}`;
+
       distribution[dateKey] = {
         total: 0,
         critical: 0,
@@ -41,13 +48,16 @@ router.get('/distribution', async (req, res) => {
         low: 0
       };
     }
-    
+
     // Count tasks by date and priority
     tasks.forEach(task => {
       const taskDate = new Date(task.deadline);
-      taskDate.setHours(0, 0, 0, 0);
-      const dateKey = taskDate.toISOString().split('T')[0];
-      
+
+      const year = taskDate.getFullYear();
+      const month = String(taskDate.getMonth() + 1).padStart(2, '0');
+      const day = String(taskDate.getDate()).padStart(2, '0');
+      const dateKey = `${year}-${month}-${day}`;
+
       if (distribution[dateKey]) {
         distribution[dateKey].total++;
         const priority = (task.priority || 'Low').toLowerCase();
@@ -56,7 +66,7 @@ router.get('/distribution', async (req, res) => {
         }
       }
     });
-    
+
     res.status(200).json(distribution);
   } catch (error) {
     console.error('Error fetching task distribution:', error);
@@ -64,20 +74,20 @@ router.get('/distribution', async (req, res) => {
   }
 });
 
-// GET /priority - Return tasks in the order provided by the PriorityQueue
-router.get('/priority', async (req, res) => {
+// GET /priority - Return tasks in the order provided by the PriorityQueue (protected)
+router.get('/priority', authMiddleware, async (req, res) => {
   console.log('GET /priority route hit');
   try {
     // Check if the taskQueue is empty
     if (taskQueue.heap.length === 0) {
-      return res.status(200).json({ message: 'No tasks in the priority queue.' });
+      return res.status(200).json([]);
     }
 
     const tasksInPriorityOrder = [];
     const tempQueue = [...taskQueue.heap]; // Create a temporary copy of the heap
 
-    // Sort the temporary queue by priorityScore to preserve the original queue
-    tempQueue.sort((a, b) => b.priorityScore - a.priorityScore);
+    // Sort the temporary queue by priorityScore (ascending for min heap - lowest = most urgent)
+    tempQueue.sort((a, b) => a.priorityScore - b.priorityScore);
 
     // Iterate through the sorted temporary queue
     while (tempQueue.length > 0) {
@@ -85,18 +95,30 @@ router.get('/priority', async (req, res) => {
       if (!node || !node.taskId) continue; // Null check before destructuring
 
       const task = await Task.findById(node.taskId);
-      if (task) tasksInPriorityOrder.push(task);
+      // Only include the task if it exists AND is not completed
+      if (task && task.status !== 'completed') {
+        tasksInPriorityOrder.push(task);
+      }
     }
 
-    res.status(200).json(tasksInPriorityOrder);
+    // Fetch completed tasks from MongoDB to append at the end
+    const completedTasks = await Task.find({
+      userId: req.userId,
+      status: 'completed'
+    }).sort({ updatedAt: -1 }); // Optional: sort completed by most recently updated
+
+    // Combine: Pending (Priority Order) + Completed
+    const finalTaskList = [...tasksInPriorityOrder, ...completedTasks];
+
+    res.status(200).json(finalTaskList);
   } catch (error) {
     console.error('Error fetching tasks by priority:', error);
     res.status(500).json({ error: 'An error occurred while fetching tasks by priority.' });
   }
 });
 
-// GET /search?q= - Search for tasks using the Trie
-router.get('/search', async (req, res) => {
+// GET /search?q= - Search for tasks using the Trie (protected)
+router.get('/search', authMiddleware, async (req, res) => {
   try {
     const query = req.query.q;
     if (!query) {
@@ -116,24 +138,24 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// POST / - Create a new task
-router.post('/', createTask);
+// POST / - Create a new task (protected)
+router.post('/', authMiddleware, createTask);
 
-// PATCH /:taskId/complete - Mark a task as completed
-router.patch('/:taskId/complete', completeTask);
+// PATCH /:taskId/complete - Mark a task as completed (protected)
+router.patch('/:taskId/complete', authMiddleware, completeTask);
 
 // DELETE /clear - Clear all tasks (protected)
 // MOVE THIS BEFORE /:taskId to avoid shadowing
 router.delete('/clear', authMiddleware, clearAllTasks);
 
-// DELETE /:taskId - Delete a task
-router.delete('/:taskId', deleteTask);
+// DELETE /:taskId - Delete a task (protected)
+router.delete('/:taskId', authMiddleware, deleteTask);
 
-// POST /undo - Undo the last deleted task
-router.post('/undo', undoDelete);
+// POST /undo - Undo the last deleted task (protected)
+router.post('/undo', authMiddleware, undoDelete);
 
-// GET / - Fetch all tasks
-router.get('/', getTasks);
+// GET / - Fetch all tasks for the authenticated user (protected)
+router.get('/', authMiddleware, getTasks);
 
 // GET /:taskId - Fetch a single task by ID
 router.get('/:taskId', async (req, res) => {
@@ -149,8 +171,8 @@ router.get('/:taskId', async (req, res) => {
   }
 });
 
-// PUT /:taskId - Update a task
-router.put('/:taskId', updateTask);
+// PUT /:taskId - Update a task (protected)
+router.put('/:taskId', authMiddleware, updateTask);
 
 // PATCH /:taskId - Update task status
 router.patch('/:taskId', async (req, res) => {
@@ -171,6 +193,29 @@ router.patch('/:taskId', async (req, res) => {
 
     if (!updatedTask) {
       return res.status(404).json({ error: 'Task not found.' });
+    }
+
+    // Re-insert into PriorityQueue if the task is now active (not completed)
+    if (status !== 'completed') {
+      const priorityScore = require('../utils/PriorityQueue').calculateScore(
+        updatedTask.deadline,
+        updatedTask.priority
+      );
+
+      // Remove any existing entry for this task first to avoid duplicates
+      taskQueue.heap = taskQueue.heap.filter(
+        (node) => node.taskId && node.taskId.toString() !== req.params.taskId.toString()
+      );
+
+      taskQueue.insert({
+        taskId: updatedTask._id,
+        priorityScore
+      });
+    } else {
+      // If task is completed, ensure it is removed from the queue
+      taskQueue.heap = taskQueue.heap.filter(
+        (node) => node.taskId && node.taskId.toString() !== req.params.taskId.toString()
+      );
     }
 
     res.status(200).json(updatedTask);

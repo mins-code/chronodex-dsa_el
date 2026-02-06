@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
+import Dashboard from './components/Dashboard';
 import TaskSearch from './components/TaskSearch';
 import PriorityQueueView from './components/PriorityQueueView';
 import TaskForm from './components/TaskForm';
@@ -64,24 +65,13 @@ function App() {
 
                 {/* Main Content */}
                 <div className="main-content">
-                  <header className="app-header">
-                    <div className="title-group">
-                      <h1>ChronoDeX</h1>
-                      <p className="subtitle">Smart Calendar Using Data Structures and Algorithms</p>
-                    </div>
-                  </header>
+
 
                   <Routes>
                     {/* Dashboard Route */}
                     <Route
                       path="/"
-                      element={
-                        <div className="dashboard">
-                          <TaskDistributionGraph />
-                          <TaskSearch />
-                          <PriorityQueueView />
-                        </div>
-                      }
+                      element={<Dashboard user={user} />}
                     />
 
                     {/* Create Task Route */}

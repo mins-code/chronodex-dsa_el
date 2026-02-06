@@ -26,7 +26,7 @@ export const registerString = async (userData) => {
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
-        throw new Error(error.response.data.error || 'Registration failed');
+      throw new Error(error.response.data.error || 'Registration failed');
     }
     throw error;
   }
@@ -37,8 +37,8 @@ export const loginString = async (credentials) => {
     const response = await api.post('/auth/login', credentials);
     return response.data;
   } catch (error) {
-      if (error.response && error.response.data) {
-        throw new Error(error.response.data.error || 'Login failed');
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.error || 'Login failed');
     }
     throw error;
   }
@@ -99,6 +99,17 @@ export const updateTaskStatus = async (id, status) => {
     return response.data;
   } catch (error) {
     console.error('Error updating task status:', error);
+    throw error;
+  }
+};
+
+// Update task details (PUT)
+export const updateTask = async (id, updates) => {
+  try {
+    const response = await api.put(`/tasks/${id}`, updates);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating task:', error);
     throw error;
   }
 };

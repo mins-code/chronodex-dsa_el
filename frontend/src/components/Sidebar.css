@@ -1,39 +1,78 @@
+/* Enhanced Glass Navigation Panel - Academic Control Room */
+
 .sidebar {
   width: 250px;
-  height: 100vh;
-  background-color: #1a1a1a;
-  color: #f0f0f0;
+  height: calc(100vh - 2rem);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   position: fixed;
-  left: 0;
-  top: 0;
+  left: 1rem;
+  top: 1rem;
+  margin: 0;
   padding: 20px;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 40px rgba(56, 189, 248, 0.08);
   z-index: 1000;
   overflow-y: auto;
 }
 
+/* App Name Header - Orbitron Typography */
+.sidebar-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.sidebar-header .app-name {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #38bdf8 0%, #7dd3fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* User Profile Section with Glass Styling */
 .sidebar-user {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: #2a2a2a;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   margin-bottom: 24px;
+  transition: all 0.3s ease;
+}
+
+.sidebar-user:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(56, 189, 248, 0.3);
 }
 
 .user-avatar {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
 }
 
 .user-info {
@@ -45,7 +84,7 @@
   font-weight: 600;
   font-size: 0.95em;
   margin: 0 0 4px 0;
-  color: #f0f0f0;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -54,103 +93,158 @@
 .user-email {
   font-size: 0.8em;
   margin: 0;
-  color: #999;
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* Navigation Links Container */
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 8px;
   flex: 1;
 }
 
+/* Futuristic Glass Navigation Links */
 .sidebar-link {
   display: flex;
   align-items: center;
   gap: 12px;
   text-decoration: none;
-  color: #f0f0f0;
-  font-size: 1rem;
-  padding: 12px 15px;
-  border-radius: 8px;
-  transition: all 0.2s;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  padding: 12px 16px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
   cursor: pointer;
-  border: 2px solid transparent;
+  border-left: 4px solid transparent;
+  position: relative;
+  background: transparent;
 }
 
+/* Hover Micro-interaction: 5px shift + text glow */
 .sidebar-link:hover {
-  background-color: #333333;
+  background: rgba(255, 255, 255, 0.05);
   transform: translateX(5px);
+  color: var(--text-primary);
+  text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
 }
 
+/* Active Link: Neon Blue Stripe + Inner Glow */
 .sidebar-link.active {
-  background-color: #007bff;
-  color: white;
-  border-color: #0056b3;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border-left-color: #38bdf8;
+  box-shadow: inset 0 0 20px rgba(56, 189, 248, 0.2),
+    0 0 15px rgba(56, 189, 248, 0.1);
+  font-weight: 600;
+}
+
+.sidebar-link.active:hover {
+  background: rgba(56, 189, 248, 0.2);
+  box-shadow: inset 0 0 25px rgba(56, 189, 248, 0.3),
+    0 0 20px rgba(56, 189, 248, 0.2);
 }
 
 .sidebar-icon {
-  color: #f0f0f0;
+  color: inherit;
   flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.sidebar-link:hover .sidebar-icon {
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
 }
 
 .sidebar-link.active .sidebar-icon {
-  color: white;
+  color: #38bdf8;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.8));
 }
 
+/* Footer Section */
 .sidebar-footer {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin-top: auto;
   padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Glass Undo Button */
 .undo-btn {
-  background-color: #007bff;
-  color: white;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(14, 165, 233, 0.2) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
   padding: 12px 15px;
-  border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
   width: 100%;
   font-weight: 600;
 }
 
 .undo-btn:hover {
-  background-color: #0056b3;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.3) 0%, rgba(14, 165, 233, 0.3) 100%);
+  border-color: #38bdf8;
+  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+  transform: translateY(-2px);
 }
 
 .undo-btn:active {
-  transform: scale(0.98);
+  transform: translateY(0);
 }
 
+/* Glass Logout Button */
 .logout-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background-color: #dc3545;
-  color: white;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
   padding: 12px 15px;
-  border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
   width: 100%;
   font-weight: 600;
 }
 
 .logout-btn:hover {
-  background-color: #c82333;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.3) 100%);
+  border-color: #ef4444;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+  transform: translateY(-2px);
 }
 
 .logout-btn:active {
-  transform: scale(0.98);
+  transform: translateY(0);
+}
+
+/* Custom Scrollbar for Sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.3);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.5);
 }

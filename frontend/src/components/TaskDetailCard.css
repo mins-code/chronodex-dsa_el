@@ -1,3 +1,5 @@
+/* Task Detail Card - Futuristic Glass Sliver */
+
 .task-detail-center {
   display: flex;
   justify-content: center;
@@ -5,48 +7,125 @@
   min-height: 60vh;
 }
 
+/* Glass Card Container */
 .task-detail-card {
-  background: white;
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.2);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-  padding: 40px 32px;
-  max-width: 500px;
+  border-left: 4px solid var(--glass-border);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  padding: 2.5rem 2rem;
+  max-width: 600px;
   width: 100%;
+  box-sizing: border-box;
   text-align: center;
-  border-left: 8px solid #999;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.task-detail-card.priority-Critical { border-left-color: #dc3545; }
-.task-detail-card.priority-High { border-left-color: #ff9800; }
-.task-detail-card.priority-Medium { border-left-color: #ffc107; }
-.task-detail-card.priority-Low { border-left-color: #17a2b8; }
+/* Hover Micro-interactions: Lift and Glow */
+.task-detail-card:hover {
+  transform: translateY(-4px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 30px rgba(56, 189, 248, 0.2);
+}
 
+/* Dynamic Priority Border Colors */
+.task-detail-card.priority-Critical {
+  border-left-color: #dc2626;
+}
+
+.task-detail-card.priority-High {
+  border-left-color: #f97316;
+}
+
+.task-detail-card.priority-Medium {
+  border-left-color: #facc15;
+}
+
+.task-detail-card.priority-Low {
+  border-left-color: #38bdf8;
+}
+
+/* Academic Typography */
 .task-detail-card h2 {
-  margin-bottom: 18px;
-  color: #333;
+  margin-bottom: 1.25rem;
+  color: #f1f5f9;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-size: 2rem;
 }
 
 .task-detail-card p {
-  color: #555;
-  margin-bottom: 18px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
 }
 
+/* Task Info Section */
 .task-detail-info {
   display: flex;
   justify-content: space-around;
-  margin-bottom: 18px;
-  gap: 10px;
-  font-size: 1.1em;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  font-size: 0.85rem;
+  flex-wrap: wrap;
 }
 
 .task-detail-info span {
   display: flex;
   align-items: center;
   gap: 6px;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
 }
 
+.task-detail-info span:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+/* Priority Score Section */
 .task-detail-score {
   font-size: 1.1em;
-  color: #333;
-  margin-top: 10px;
+  color: #f1f5f9;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(56, 189, 248, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.task-detail-score strong {
+  color: #38bdf8;
+}
+
+/* Delete Button Styling (if added in future) */
+.delete-button {
+  padding: 8px;
+  background: transparent;
+  border: 1px solid #f1f5f9;
+  border-radius: 6px;
+  color: #f1f5f9;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.delete-button:hover {
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+  border-color: #ef4444;
+  color: #ef4444;
+  transform: scale(1.1);
 }

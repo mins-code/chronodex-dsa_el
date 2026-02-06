@@ -29,8 +29,9 @@ const createTask = async (req, res) => {
     // Calculate priorityScore before saving
     const priorityScore = PriorityQueue.calculateScore(deadline, priority);
 
-    // Create and save the new task to MongoDB, including priorityScore
+    // Create and save the new task to MongoDB, including priorityScore and userId
     const newTask = new Task({
+      userId: req.userId,
       title,
       description,
       deadline,
@@ -107,6 +108,11 @@ const completeTask = async (req, res) => {
     // Update the task status to "completed" in MongoDB
     task.status = 'completed';
     await task.save();
+
+    // Remove the task from the PriorityQueue since it's now completed
+    taskQueue.heap = taskQueue.heap.filter(
+      (node) => node.taskId && node.taskId.toString() !== taskId.toString()
+    );
 
     res.status(200).json({
       message: 'Task marked as completed successfully.',
@@ -247,15 +253,14 @@ const { calculateTimeDeviation } = require('../utils/UserPatternAnalyzer');
 
 const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find();
-    
+    // Fetch only tasks belonging to the authenticated user
+    const tasks = await Task.find({ userId: req.userId });
+
     // Calculate deviation based on pattern analysis
-    // Assuming userId is available in req.user set by auth middleware (or passed contextually)
-    // Using a placeholder or null if user context isn't fully established for pattern analysis yet
-    const userId = req.user ? req.user._id : null; 
-    
+    const userId = req.userId;
+
     const deviationPercentage = await calculateTimeDeviation(userId);
-    
+
     // Structure response with tasks and suggestion
     res.status(200).json({
       tasks: tasks,
@@ -309,21 +314,21 @@ const updateTask = async (req, res) => {
 
     // 4. Handle IntervalScheduler updates
     if (
-        (updates.deadline && updates.deadline !== task.deadline) || 
-        (updates.duration && updates.duration !== task.duration)
+      (updates.deadline && updates.deadline !== task.deadline) ||
+      (updates.duration && updates.duration !== task.duration)
     ) {
-        intervalScheduler.intervals = intervalScheduler.intervals.filter(
-            ([, , id]) => id && id.toString() !== taskId.toString()
-        );
-        
-        const finalDeadline = updates.deadline || task.deadline;
-        const finalDuration = updates.duration || task.duration;
-        
-        if (finalDeadline && finalDuration) {
-            const startTime = new Date(finalDeadline).getTime() - finalDuration * 60 * 1000;
-            const endTime = new Date(finalDeadline).getTime();
-            intervalScheduler.addInterval(startTime, endTime, taskId);
-        }
+      intervalScheduler.intervals = intervalScheduler.intervals.filter(
+        ([, , id]) => id && id.toString() !== taskId.toString()
+      );
+
+      const finalDeadline = updates.deadline || task.deadline;
+      const finalDuration = updates.duration || task.duration;
+
+      if (finalDeadline && finalDuration) {
+        const startTime = new Date(finalDeadline).getTime() - finalDuration * 60 * 1000;
+        const endTime = new Date(finalDeadline).getTime();
+        intervalScheduler.addInterval(startTime, endTime, taskId);
+      }
     }
 
     res.status(200).json(updatedTask);
