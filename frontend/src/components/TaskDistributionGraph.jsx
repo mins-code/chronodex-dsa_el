@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { getTaskDistribution } from '../api';
 import { Calendar, TrendingUp } from 'lucide-react';
 import './TaskDistributionGraph.css';
@@ -7,15 +7,14 @@ const TaskDistributionGraph = () => {
   const [distribution, setDistribution] = useState({});
   const [loading, setLoading] = useState(true);
   const [maxCount, setMaxCount] = useState(0);
+  const graphContainerRef = useRef(null);
 
   const fetchDistribution = async () => {
     try {
       const data = await getTaskDistribution(14);
       setDistribution(data);
-      
-      // Calculate max count for scaling
-      const max = Math.max(...Object.values(data).map(d => d.total), 1);
-      setMaxCount(max);
+      const max = Math.max(...Object.values(data).map(d => d.total), 3); // Min cap at 3
+      setMaxCount(Math.ceil(max * 1.2)); // Add some padding on top
       setLoading(false);
     } catch (error) {
       console.error('Error fetching distribution:', error);
@@ -25,140 +24,135 @@ const TaskDistributionGraph = () => {
 
   useEffect(() => {
     fetchDistribution();
-    
-    // Auto-refresh every 60 seconds
     const interval = setInterval(fetchDistribution, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  const formatDate = (dateString) => {
+  const entries = Object.entries(distribution);
+  const width = 800;
+  const height = 250;
+  const padding = 40;
+  const chartWidth = width - padding * 2;
+  const chartHeight = height - padding * 2;
+
+  const points = entries.map(([date, counts], index) => {
+    const x = padding + (index / (entries.length - 1)) * chartWidth;
+    const y = height - padding - (counts.total / maxCount) * chartHeight;
+    return { x, y, date, counts };
+  });
+
+  const pathData = points.length > 0
+    ? `M ${points.map(p => `${p.x},${p.y}`).join(' L ')}`
+    : '';
+
+  // Create area shape: Move to first point, draw lines, drop to bottom right, move to bottom left, close
+  const areaData = points.length > 0
+    ? `${pathData} L ${points[points.length - 1].x},${height - padding} L ${points[0].x},${height - padding} Z`
+    : '';
+
+  const formatDate = (dateString, full = false) => {
     const date = new Date(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (date.getTime() === today.getTime()) {
-      return 'Today';
-    }
-    
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (date.getTime() === tomorrow.getTime()) {
-      return 'Tomorrow';
-    }
-    
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return full
+      ? date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+      : date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
   };
 
-  const getDayName = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { weekday: 'short' });
-  };
-
-  const isToday = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    date.setHours(0, 0, 0, 0);
-    return date.getTime() === today.getTime();
-  };
-
-  if (loading) {
-    return (
-      <div className="distribution-graph loading">
-        <div className="graph-header">
-          <TrendingUp size={20} />
-          <h3>Task Distribution</h3>
-        </div>
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  if (loading) return <div className="distribution-graph loading">Loading...</div>;
 
   return (
-    <div className="distribution-graph">
+    <div className="distribution-graph line-chart-mode">
       <div className="graph-header">
-        <TrendingUp size={20} />
-        <h3>Task Distribution - Next 14 Days</h3>
-        <Calendar size={18} />
-      </div>
-      
-      <div className="graph-container">
-        <div className="y-axis">
-          <span className="y-label">{maxCount}</span>
-          <span className="y-label">{Math.ceil(maxCount / 2)}</span>
-          <span className="y-label">0</span>
+        <div>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <TrendingUp size={20} color="#a855f7" />
+            Task Flow
+          </h3>
+          <span className="subtitle">Next 14 Days Forecast</span>
         </div>
-        
-        <div className="bars-container">
-          {Object.entries(distribution).map(([date, counts]) => {
-            const percentage = maxCount > 0 ? (counts.total / maxCount) * 100 : 0;
-            const isCurrentDay = isToday(date);
-            
-            // Calculate color segments
-            const criticalPercent = (counts.critical / counts.total) * 100 || 0;
-            const highPercent = (counts.high / counts.total) * 100 || 0;
-            const mediumPercent = (counts.medium / counts.total) * 100 || 0;
-            const lowPercent = (counts.low / counts.total) * 100 || 0;
-            
+      </div>
+
+      <div className="line-chart-container" ref={graphContainerRef}>
+        <svg viewBox={`0 0 ${width} ${height}`} className="line-chart-svg">
+          <defs>
+            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#9333ea" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#9333ea" stopOpacity="0.0" />
+            </linearGradient>
+            <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#c084fc" />
+              <stop offset="100%" stopColor="#a855f7" />
+            </linearGradient>
+          </defs>
+
+          {/* Grid Lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map((tick) => {
+            const y = height - padding - (tick * chartHeight);
             return (
-              <div 
-                key={date} 
-                className={`bar-wrapper ${isCurrentDay ? 'today' : ''}`}
-              >
-                <div 
-                  className="bar"
-                  style={{ 
-                    height: `${percentage}%`,
-                    background: counts.total > 0 
-                      ? `linear-gradient(to top,
-                          #6b7280 0%,
-                          #6b7280 ${lowPercent}%,
-                          #60a5fa ${lowPercent}%,
-                          #60a5fa ${lowPercent + mediumPercent}%,
-                          #fbbf24 ${lowPercent + mediumPercent}%,
-                          #fbbf24 ${lowPercent + mediumPercent + highPercent}%,
-                          #ef4444 ${lowPercent + mediumPercent + highPercent}%,
-                          #ef4444 100%)`
-                      : '#374151'
-                  }}
-                >
-                  <div className="tooltip">
-                    <strong>{formatDate(date)}</strong>
-                    <div>Total: {counts.total}</div>
-                    {counts.critical > 0 && <div className="critical">Critical: {counts.critical}</div>}
-                    {counts.high > 0 && <div className="high">High: {counts.high}</div>}
-                    {counts.medium > 0 && <div className="medium">Medium: {counts.medium}</div>}
-                    {counts.low > 0 && <div className="low">Low: {counts.low}</div>}
-                  </div>
-                  {counts.total > 0 && <span className="count">{counts.total}</span>}
-                </div>
-                <div className="bar-label">
-                  <div className="day-name">{getDayName(date)}</div>
-                  <div className="date">{formatDate(date)}</div>
-                </div>
-              </div>
+              <g key={tick}>
+                <line
+                  x1={padding}
+                  y1={y}
+                  x2={width - padding}
+                  y2={y}
+                  stroke="rgba(255,255,255,0.05)"
+                  strokeDasharray="4 4"
+                />
+                <text x={padding - 10} y={y + 4} textAnchor="end" className="chart-label">
+                  {Math.round(tick * maxCount)}
+                </text>
+              </g>
             );
           })}
-        </div>
+
+          {/* Area Fill */}
+          <path d={areaData} fill="url(#areaGradient)" />
+
+          {/* The Line */}
+          <path
+            d={pathData}
+            fill="none"
+            stroke="url(#lineGradient)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="chart-line"
+          />
+
+          {/* Data Points */}
+          {points.map((p, i) => (
+            <g key={i} className="data-point-group">
+              <circle cx={p.x} cy={p.y} r="4" className="data-point-dot" />
+              <circle cx={p.x} cy={p.y} r="12" className="data-point-hitbox" />
+
+              {/* X Axis Labels (every alternate label to enable fit) */}
+              {i % 2 === 0 && (
+                <text x={p.x} y={height - 10} textAnchor="middle" className="chart-label x-axis">
+                  {formatDate(p.date)}
+                </text>
+              )}
+
+              {/* Tooltip (SVG foreignObject or simple SVG implementation) */}
+              <foreignObject x={p.x - 85} y={p.y - 120} width="170" height="110" className="svg-tooltip-wrapper">
+                <div className="chart-tooltip">
+                  <div className="tooltip-date">{formatDate(p.date, true)}</div>
+                  <div className="tooltip-total">{p.counts.total} Tasks</div>
+                  <div className="tooltip-breakdown">
+                    <div className="breakdown-item"><span className="dot crit"></span> {p.counts.critical || 0} Critical</div>
+                    <div className="breakdown-item"><span className="dot high"></span> {p.counts.high || 0} High</div>
+                    <div className="breakdown-item"><span className="dot med"></span> {p.counts.medium || 0} Med</div>
+                  </div>
+                </div>
+              </foreignObject>
+            </g>
+          ))}
+        </svg>
       </div>
-      
+
       <div className="graph-legend">
-        <div className="legend-item">
-          <span className="legend-color critical"></span>
-          <span>Critical</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color high"></span>
-          <span>High</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color medium"></span>
-          <span>Medium</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color low"></span>
-          <span>Low</span>
-        </div>
+        <div className="legend-item"><span className="dot crit"></span> Critical</div>
+        <div className="legend-item"><span className="dot high"></span> High</div>
+        <div className="legend-item"><span className="dot med"></span> Medium</div>
+        <div className="legend-item"><span className="dot low"></span> Low</div>
       </div>
     </div>
   );

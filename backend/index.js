@@ -11,7 +11,7 @@ const app = express();
 
 // Middleware: Updated CORS to explicitly allow your Vite frontend
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite's default port
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'], // Allow multiple Vite ports
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   credentials: true
 }));
@@ -41,19 +41,32 @@ app.get('/', (req, res) => {
 });
 
 // Connect to MongoDB using the URI from your .env file
+console.log('[DEBUG] Starting MongoDB connection...');
 const uri = process.env.MONGODB_URI;
+console.log('[DEBUG] MongoDB URI:', uri ? 'URI is set' : 'URI is MISSING');
+
 mongoose
-  .connect(uri)
+  .connect(uri, {
+    serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+    socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+    family: 4, // Force IPv4 to avoid some network issues
+  })
   .then(async () => {
-    console.log('MongoDB database connection established successfully');
-    
+    console.log('[SUCCESS] MongoDB database connection established successfully');
+
     // Initialize data structures after DB connection
+    console.log('[DEBUG] About to initialize state...');
     await initializeState();
+    console.log('[DEBUG] State initialized successfully');
 
     // Set port and start listening
     const PORT = 5001; // HARDCODED FORCE CHANGE
     app.listen(PORT, () => {
       console.log(`[ANTIGRAVITY] Server LOADED. Running on port: ${PORT}`);
+      console.log('[DEBUG] All routes should now be accessible');
     });
   })
-  .catch((err) => console.log('MongoDB connection error:', err));
+  .catch((err) => {
+    console.error('[ERROR] MongoDB connection error:', err);
+    console.error('[ERROR] Stack trace:', err.stack);
+  });

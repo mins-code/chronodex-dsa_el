@@ -12,6 +12,7 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
 import SettingsPage from './components/SettingsPage';
+import Planner from './components/Planner';
 import './App.css';
 
 function App() {
@@ -112,6 +113,17 @@ function App() {
                         <div className="notifications">
                           <h2>Notifications</h2>
                           <Notifications />
+                        </div>
+                      }
+                    />
+
+                    {/* Planner Route */}
+                    <Route
+                      path="/planner"
+                      element={
+                        <div className="planner-page">
+                          <h2>Task Planner</h2>
+                          <Planner />
                         </div>
                       }
                     />
