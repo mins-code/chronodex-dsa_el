@@ -4,24 +4,40 @@ import { ArrowLeft, Clock, Calendar, AlertCircle, Edit, Trash2 } from 'lucide-re
 import axios from 'axios';
 import './TaskDetail.css';
 
+
+
 const TaskDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [task, setTask] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [bottleneckData, setBottleneckData] = useState(null);
 
     useEffect(() => {
         const fetchTask = async () => {
             try {
                 const token = localStorage.getItem('token');
+                // Fetch Task
                 const response = await axios.get(`http://localhost:5001/api/tasks/${id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setTask(response.data);
+
+                // Fetch Bottlenecks to check if this task is one
+                // (Optimally this would be part of task details, but separate fetch is fine for now)
+                const bottleneckResponse = await axios.get('http://localhost:5001/api/tasks/bottlenecks', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                const found = bottleneckResponse.data.find(b => b.taskId === id);
+                if (found) {
+                    setBottleneckData(found);
+                }
+
                 setLoading(false);
             } catch (err) {
-                console.error('Error fetching task:', err);
+                console.error('Error fetching task/bottlenecks:', err);
                 setError('Failed to load task details');
                 setLoading(false);
             }
@@ -96,6 +112,26 @@ const TaskDetail = () => {
 
                 {/* Title */}
                 <h1 className="task-detail-title">{task.title}</h1>
+
+                {/* Dependency Impact Analysis (Bottleneck Warning) */}
+                {bottleneckData && (
+                    <div className="impact-analysis-card">
+                        <div className="impact-header">
+                            <AlertCircle color="#ef4444" size={20} />
+                            <h3>Dependency Impact Analysis</h3>
+                        </div>
+                        <p className="impact-summary">
+                            This task is a critical bottleneck. Completing it will unblock <strong>{bottleneckData.blockedCount} tasks</strong> in your workflow.
+                        </p>
+                        <div className="blocked-tasks-list">
+                            <span className="blocked-label">Delays:</span>
+                            {bottleneckData.blockedTasks.map((t, idx) => (
+                                <span key={idx} className="blocked-task-chip">{t.title}</span>
+                            ))}
+                            {bottleneckData.blockedCount > 3 && <span className="blocked-more">+{bottleneckData.blockedCount - 3} more</span>}
+                        </div>
+                    </div>
+                )}
 
                 {/* Priority Badge */}
                 <div className="task-detail-meta">

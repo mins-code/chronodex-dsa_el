@@ -211,4 +211,15 @@ export const getEfficiencyAnalytics = async () => {
   }
 };
 
+// Get dependency bottlenecks
+export const getDependencyBottlenecks = async () => {
+  try {
+    const response = await api.get('/tasks/bottlenecks');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching bottlenecks:', error);
+    throw error;
+  }
+};
+
 export default api;

@@ -5,7 +5,7 @@ import TaskSearch from './TaskSearch';
 import PriorityQueueView from './PriorityQueueView';
 import { useTasks } from '../context/TaskContext';
 import './Dashboard.css';
-import { getEfficiencyAnalytics } from '../api';
+import { getEfficiencyAnalytics, getDependencyBottlenecks } from '../api';
 import { calculateDayLoad, getTasksForDate } from '../utils/taskUtils';
 
 const Dashboard = ({ user, onLogout }) => {
@@ -13,10 +13,22 @@ const Dashboard = ({ user, onLogout }) => {
   const [mostUrgentTask, setMostUrgentTask] = useState(null);
   const [dailyPendingCount, setDailyPendingCount] = useState(0);
   const [forecast, setForecast] = useState([]);
+  const [bottlenecks, setBottlenecks] = useState([]);
 
   // Refresh tasks on mount to ensure fresh data
   useEffect(() => {
     fetchTasks();
+
+    // Fetch bottlenecks
+    const fetchBottlenecks = async () => {
+      try {
+        const data = await getDependencyBottlenecks();
+        setBottlenecks(data);
+      } catch (error) {
+        console.error("Failed to fetch bottlenecks", error);
+      }
+    };
+    fetchBottlenecks();
   }, [fetchTasks]);
 
   // Calculate Forecast & Daily Stats
@@ -100,17 +112,67 @@ const Dashboard = ({ user, onLogout }) => {
       <div className="dashboard-summary">
         <div className="glass-tile">
           {mostUrgentTask ? (
-            <div className="most-urgent-card">
-              <h3>🔴 Most Urgent Task</h3>
-              <p><strong>{mostUrgentTask.title}</strong></p>
-              <p className={`priority-label priority-${mostUrgentTask.priority}`}>
-                {mostUrgentTask.priority} Priority
-              </p>
-              <p>Deadline: {new Date(mostUrgentTask.deadline).toLocaleString()}</p>
+            <div
+              className="most-urgent-card sub-card"
+              style={{
+                borderLeft: `4px solid ${mostUrgentTask.priority === 'Critical' ? '#ef4444' :
+                  mostUrgentTask.priority === 'High' ? '#f97316' :
+                    mostUrgentTask.priority === 'Medium' ? '#eab308' :
+                      '#38bdf8'
+                  }`
+              }}
+            >
+              <h3>
+                <span style={{ fontSize: '1.2rem' }}>{mostUrgentTask.priority === 'Critical' ? '🔴' : '🔵'}</span>
+                Most Urgent Task
+              </h3>
+              <div className="urgent-task-details">
+                <p className="urgent-title"><strong>{mostUrgentTask.title}</strong></p>
+                <div className="urgent-meta">
+                  <span className={`priority-label priority-${mostUrgentTask.priority}`}>
+                    {mostUrgentTask.priority}
+                  </span>
+                  <span className="deadline-text">Due: {new Date(mostUrgentTask.deadline).toLocaleString()}</span>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="most-urgent-card empty">
               <p>No tasks found. Create your first task!</p>
+            </div>
+          )}
+
+          {/* Bottleneck Warning Badges (Show All) */}
+          {bottlenecks.length > 0 && (
+            <div className="bottlenecks-container" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {bottlenecks.map((bottleneck) => (
+                <div key={bottleneck.taskId} className="bottleneck-warning group">
+                  <div className="bottleneck-icon">🔴</div>
+                  <div className="bottleneck-info">
+                    <h4>Dependency Bottleneck</h4>
+                    <p><strong>{bottleneck.title}</strong></p>
+                    <span className="blocks-badge">
+                      Blocks {bottleneck.blockedCount} future tasks
+                    </span>
+                  </div>
+
+                  {/* Hover Details Tooltip */}
+                  <div className="bottleneck-hover-details glass-tile">
+                    <div className="scanning-line-small"></div>
+                    <div className="details-header">Blocked Tasks:</div>
+                    <ul className="blocked-list">
+                      {bottleneck.blockedTasks && bottleneck.blockedTasks.map(bt => (
+                        <li key={bt.id}>{bt.title}</li>
+                      ))}
+                      {bottleneck.blockedCount > (bottleneck.blockedTasks?.length || 0) && (
+                        <li className="more-count">
+                          + {bottleneck.blockedCount - (bottleneck.blockedTasks?.length || 0)} more
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

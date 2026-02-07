@@ -103,24 +103,189 @@
 }
 
 /* Most Urgent Card */
+/* Most Urgent Card (Sub-Section) */
+.bottleneck-hover-details {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 10px);
+  /* Position above the card */
+  right: 0;
+  /* Align to right corner */
+  left: auto;
+  /* Override left positioning */
+  width: 300px;
+  background: rgba(15, 23, 42, 0.98);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  padding: 16px;
+  z-index: 9999;
+  /* Very high to ensure visibility above all elements */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(239, 68, 68, 0.2);
+  animation: fadeIn 0.2s ease-out;
+  overflow: hidden;
+  max-height: 400px;
+  /* Prevent excessive height */
+  overflow-y: auto;
+  /* Allow scrolling if needed */
+}
+
+/* Arrow for the tooltip - pointing down from right side */
+.bottleneck-hover-details::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  /* Arrow at bottom of tooltip */
+  right: 20px;
+  /* Position arrow on right side */
+  left: auto;
+  border-width: 8px;
+  border-style: solid;
+  border-color: rgba(239, 68, 68, 0.4) transparent transparent transparent;
+}
+
+/* Scanning Line Animation */
+.scanning-line-small {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ef4444, transparent);
+  animation: scanSmall 2s linear infinite;
+  opacity: 0.8;
+}
+
+@keyframes scanSmall {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.bottleneck-warning:hover .bottleneck-hover-details {
+  display: block;
+}
+
 .most-urgent-card {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background: rgba(56, 189, 248, 0.05);
+  /* Bluish tint */
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.most-urgent-card:hover {
+  background: rgba(56, 189, 248, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .most-urgent-card h3 {
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #f87171;
-  /* Red-400 */
+  gap: 10px;
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+  margin-bottom: 4px;
 }
 
-.most-urgent-card p {
+.details-header {
+  font-size: 0.75rem;
+  color: #38bdf8;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  font-family: 'Orbitron', 'Courier New', monospace;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.3);
+  padding-bottom: 6px;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+.blocked-list {
+  list-style: none;
   margin: 0;
-  color: var(--text-secondary);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.blocked-list li {
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  padding: 6px 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border-left: 2px solid #ef4444;
+  border-radius: 4px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.blocked-list li:hover {
+  background: rgba(239, 68, 68, 0.15);
+  transform: translateX(2px);
+}
+
+.blocked-list li:before {
+  content: "▸";
+  color: #ef4444;
+  margin-right: 8px;
+  font-weight: bold;
+}
+
+.blocked-list li.more-count {
+  font-style: italic;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  background: rgba(148, 163, 184, 0.1);
+  border-left-color: #94a3b8;
+}
+
+.urgent-task-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.urgent-title {
+  font-size: 1.2rem;
+  color: #fff;
+  margin: 0;
+}
+
+.urgent-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.deadline-text {
+  font-size: 0.9rem;
+  color: #94a3b8;
 }
 
 .most-urgent-card strong {
@@ -192,4 +357,78 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Bottleneck Warning Styles */
+.bottleneck-warning {
+  margin-top: 15px;
+  padding: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: pulse-red 3s infinite;
+  position: relative;
+  /* For absolute positioning of tooltip */
+  cursor: pointer;
+  overflow: visible !important;
+  /* Critical: Allow tooltip to overflow */
+  z-index: 1;
+  /* Ensure stacking context */
+}
+
+/* Ensure parent containers also allow overflow */
+.bottlenecks-container {
+  overflow: visible !important;
+  position: relative;
+  z-index: 10;
+}
+
+.glass-tile {
+  overflow: visible !important;
+  /* Allow tooltips to escape */
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.2);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.bottleneck-icon {
+  font-size: 1.5rem;
+}
+
+.bottleneck-info h4 {
+  margin: 0;
+  color: #fca5a5;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bottleneck-info p {
+  margin: 4px 0;
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.blocks-badge {
+  display: inline-block;
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: bold;
 }

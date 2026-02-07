@@ -651,7 +651,7 @@ const CalendarView = () => {
                                                         {task.title}
                                                     </span>
                                                 </div>
-                                                {task.description && <span className="daily-task-desc" style={{ fontSize: '0.8rem', opacity: 0.9, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.description}</span>}
+
                                             </div>
                                         </div>
                                     );

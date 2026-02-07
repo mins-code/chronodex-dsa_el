@@ -95,6 +95,40 @@ class DirectedGraph {
     // So we need to reverse the stack.
     return stack.reverse();
   }
+
+  // Calculate impact score (number of unique descendants) for each task
+  getBottleneckTasks() {
+    const bottlenecks = [];
+
+    // Iterate over all tasks in the graph
+    for (const taskId of this.adjacencyList.keys()) {
+      const dependentSet = new Set();
+      const queue = [...(this.adjacencyList.get(taskId) || [])];
+
+      // BFS to find all unique reachable nodes
+      while (queue.length > 0) {
+        const current = queue.shift();
+        if (!dependentSet.has(current)) {
+          dependentSet.add(current);
+          // Add current node's dependents to queue
+          const followers = this.adjacencyList.get(current) || [];
+          queue.push(...followers);
+        }
+      }
+
+      // Only include if it blocks at least one task
+      if (dependentSet.size > 0) {
+        bottlenecks.push({
+          taskId,
+          blockedCount: dependentSet.size,
+          blockedTaskIds: Array.from(dependentSet)
+        });
+      }
+    }
+
+    // Sort by impact (descending)
+    return bottlenecks.sort((a, b) => b.blockedCount - a.blockedCount);
+  }
 }
 
 module.exports = DirectedGraph;

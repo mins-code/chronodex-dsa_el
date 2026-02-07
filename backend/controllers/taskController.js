@@ -533,6 +533,68 @@ const calculateDailyLoad = async (req, res) => {
   }
 };
 
+const getDependencyBottlenecks = async (req, res) => {
+  try {
+    // 1. Get raw bottleneck data from the graph
+    const bottlenecks = dependencyGraph.getBottleneckTasks();
+
+    if (bottlenecks.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    // 2. Extract IDs to fetch Task details (Bottlenecks AND their blocked tasks)
+    const bottleneckIds = bottlenecks.map(b => b.taskId);
+    const allBlockedIds = bottlenecks.flatMap(b => b.blockedTaskIds || []);
+
+    // Combine and unique
+    const distinctIds = [...new Set([...bottleneckIds, ...allBlockedIds])];
+
+    // 3. Fetch Task details (only title and priority for display)
+    const tasks = await Task.find({
+      _id: { $in: distinctIds },
+      userId: req.userId // Ensure user owns these tasks
+    }).select('title priority status');
+
+    // 4. Create a map for quick lookup
+    const taskMap = {};
+    tasks.forEach(t => {
+      taskMap[t._id.toString()] = t;
+    });
+
+    // 5. Enrich bottleneck data with titles and blocked task details
+    const enrichedBottlenecks = bottlenecks
+      .filter(b => {
+        const task = taskMap[b.taskId];
+        // Filter out if task not found OR if task is already completed
+        return task && task.status !== 'completed';
+      })
+      .map(b => {
+        const task = taskMap[b.taskId];
+
+        // Map blocked IDs to titles (limiting to top 3 for display, or sending all)
+        // We'll send first 3 for the preview/tooltip
+        const blockedDetails = (b.blockedTaskIds || [])
+          .map(id => taskMap[id])
+          .filter(Boolean) // Filter out if blocked task lookup failed
+          .map(t => ({ id: t._id, title: t.title }));
+
+        return {
+          taskId: b.taskId,
+          title: task.title,
+          blockedCount: b.blockedCount,
+          blockedTasks: blockedDetails.slice(0, 3), // Send top 3 for UI
+          priority: task.priority,
+          status: task.status
+        };
+      });
+
+    res.status(200).json(enrichedBottlenecks);
+  } catch (error) {
+    console.error('Error fetching bottlenecks:', error);
+    res.status(500).json({ error: 'Failed to fetch bottleneck data' });
+  }
+};
+
 module.exports = {
   createTask,
   completeTask,
@@ -542,5 +604,6 @@ module.exports = {
   getTasks,
   updateTask,
   getEfficiencyAnalytics,
-  calculateDailyLoad
+  calculateDailyLoad,
+  getDependencyBottlenecks
 };

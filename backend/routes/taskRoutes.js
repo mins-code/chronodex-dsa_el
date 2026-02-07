@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task');
-const { createTask, completeTask, deleteTask, undoDelete, clearAllTasks, getTasks, updateTask, getEfficiencyAnalytics, calculateDailyLoad } = require('../controllers/taskController');
+const { createTask, completeTask, deleteTask, undoDelete, clearAllTasks, getTasks, updateTask, getEfficiencyAnalytics, calculateDailyLoad, getDependencyBottlenecks } = require('../controllers/taskController');
 const { taskTrie, taskQueue } = require('../state');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -12,6 +12,9 @@ router.get('/analytics/efficiency', authMiddleware, getEfficiencyAnalytics);
 
 // GET /daily-load - Return daily load score and status (protected)
 router.get('/daily-load', authMiddleware, calculateDailyLoad);
+
+// GET /bottlenecks - Return tasks causing bottlenecks (protected)
+router.get('/bottlenecks', authMiddleware, getDependencyBottlenecks);
 
 // GET /distribution - Return task counts grouped by date (protected)
 router.get('/distribution', authMiddleware, async (req, res) => {
