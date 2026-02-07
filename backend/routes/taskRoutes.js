@@ -51,7 +51,10 @@ router.get('/distribution', authMiddleware, async (req, res) => {
 
     // Count tasks by date and priority
     tasks.forEach(task => {
+      if (!task.deadline) return;
+
       const taskDate = new Date(task.deadline);
+      if (isNaN(taskDate.getTime())) return;
 
       const year = taskDate.getFullYear();
       const month = String(taskDate.getMonth() + 1).padStart(2, '0');

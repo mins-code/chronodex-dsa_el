@@ -44,15 +44,32 @@ class PriorityQueue {
 
     const weight = priorityMap[priority] !== undefined ? priorityMap[priority] : 30;
 
+    // Handle invalid deadline
+    if (!deadline) {
+      return weight + 100; // Push to back if no deadline
+    }
+
     const now = Date.now();
     const deadlineDate = new Date(deadline).getTime();
+
+    // Check if deadline is valid date
+    if (isNaN(deadlineDate)) {
+      return weight + 100; // Push to back if invalid deadline
+    }
 
     // Time difference in hours
     const diffInHours = (deadlineDate - now) / 3600000;
 
-    // Formula: Weight + Math.max(0, Math.min(diffInHours, 19))
-    // Capped at 19 hours. Overdue (negative diff) is treated as 0 diff -> Score = Weight + 0.
-    const score = weight + Math.max(0, Math.min(diffInHours, 19));
+    // If overdue (negative diff), return a negative score based on weight
+    // This ensures Critical (-100) < High (-90) < Medium (-80) < Low (-70)
+    // All overdue tasks will still be "smaller" (more urgent) than any upcoming task (0+)
+    if (diffInHours < 0) {
+      return parseFloat((weight - 100).toFixed(4));
+    }
+
+    // Formula: Weight + Math.min(diffInHours, 19)
+    // Capped at 19 hours. Tasks due in 19+ hours get max score (weight + 19).
+    const score = weight + Math.min(diffInHours, 19);
 
     return parseFloat(score.toFixed(4));
   }

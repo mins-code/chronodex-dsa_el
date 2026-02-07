@@ -122,11 +122,11 @@
     border-color: rgba(56, 189, 248, 0.4);
     color: #38bdf8;
     box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
-    transform: translateY(-2px) rotate(90deg);
+    transform: translateY(-2px);
 }
 
 .header-icon-btn:active {
-    transform: translateY(0) rotate(90deg);
+    transform: translateY(0);
 }
 
 /* Logout Button */

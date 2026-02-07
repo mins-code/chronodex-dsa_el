@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut } from 'lucide-react';
+import { Settings, LogOut, Bell } from 'lucide-react';
 import './Header.css';
 
 const Header = ({ onLogout }) => {
@@ -23,6 +23,10 @@ const Header = ({ onLogout }) => {
 
     // Get first letter for avatar
     const avatarLetter = userName.charAt(0).toUpperCase();
+
+    const handleNotifications = () => {
+        navigate('/notifications');
+    };
 
     const handleSettings = () => {
         navigate('/settings');
@@ -54,6 +58,11 @@ const Header = ({ onLogout }) => {
                         {userEmail && <span className="header-email">{userEmail}</span>}
                     </div>
                 </div>
+
+                {/* Notification Bell */}
+                <button className="header-icon-btn" onClick={handleNotifications} title="Notifications">
+                    <Bell size={20} />
+                </button>
 
                 {/* Settings Icon */}
                 <button className="header-icon-btn" onClick={handleSettings} title="Settings">

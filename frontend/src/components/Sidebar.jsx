@@ -27,10 +27,6 @@ const Sidebar = () => {
           <GitBranch size={20} className="sidebar-icon" />
           Dependencies
         </NavLink>
-        <NavLink to="/notifications" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
-          <Bell size={20} className="sidebar-icon" />
-          Notifications
-        </NavLink>
         <NavLink to="/planner" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
           <Workflow size={20} className="sidebar-icon" />
           Planner
