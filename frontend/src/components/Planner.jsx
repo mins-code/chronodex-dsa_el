@@ -12,7 +12,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { getTasks } from '../api'; // Ensure this path is correct
-import { Workflow, GripVertical, Save, Trash2, Maximize } from 'lucide-react';
+import { Workflow, GripVertical, Save, Trash2, Maximize, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import './Planner.css';
 
 const flowKey = 'chronodex-planner-flow';
@@ -195,6 +195,55 @@ const Planner = () => {
         }
     };
 
+    const [selectedDate, setSelectedDate] = useState(new Date());
+
+    // Normalize date helper
+    const normalizeDateString = (date) => {
+        if (!date) return '';
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const handlePrevDay = () => {
+        const newDate = new Date(selectedDate);
+        newDate.setDate(selectedDate.getDate() - 1);
+        setSelectedDate(newDate);
+    };
+
+    const handleNextDay = () => {
+        const newDate = new Date(selectedDate);
+        newDate.setDate(selectedDate.getDate() + 1);
+        setSelectedDate(newDate);
+    };
+
+    const handleToday = () => {
+        setSelectedDate(new Date());
+    };
+
+    // Filter tasks for selected date
+    const getDailyTasks = () => {
+        const dateStr = normalizeDateString(selectedDate);
+        const dailyTasks = tasks.filter(task => {
+            if (!task.deadline) return false;
+            return normalizeDateString(task.deadline) === dateStr;
+        });
+
+        // Sort: Active first (by priority), then Completed
+        return dailyTasks.sort((a, b) => {
+            if (a.status === 'completed' && b.status !== 'completed') return 1;
+            if (a.status !== 'completed' && b.status === 'completed') return -1;
+            // Then by priority score if needed, or keeping original sort
+            const scoreA = calculateDynamicScore(a);
+            const scoreB = calculateDynamicScore(b);
+            return scoreA - scoreB;
+        });
+    };
+
+    const filteredTasks = getDailyTasks();
+
     return (
         <div className="planner-container">
             {/* Canvas Area (Left) */}
@@ -269,33 +318,63 @@ const Planner = () => {
                 </ReactFlowProvider>
             </div>
 
-            {/* Sidebar with Tasks (Right) */}
+            {/* Sidebar with Daily Tasks (Right) */}
             <div className="planner-sidebar">
-                <h3>
-                    <Workflow size={20} />
-                    Task Planner
-                </h3>
+                <div className="sidebar-header">
+                    <h3>
+                        <Workflow size={20} />
+                        Task Planner
+                    </h3>
+
+                    {/* Date Navigation */}
+                    <div className="date-navigation">
+                        <button onClick={handlePrevDay} className="nav-btn" title="Previous Day">
+                            <ChevronLeft size={16} />
+                        </button>
+                        <span className="current-date" onClick={handleToday} title="Go to Today">
+                            {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                        <button onClick={handleNextDay} className="nav-btn" title="Next Day">
+                            <ChevronRight size={16} />
+                        </button>
+                    </div>
+                </div>
+
                 <div className="tasks-list">
                     {loading ? (
-                        <p style={{ color: '#9ca3af' }}>Loading tasks...</p>
-                    ) : tasks.length === 0 ? (
-                        <p style={{ color: '#9ca3af' }}>No tasks available.</p>
+                        <p style={{ color: '#9ca3af', textAlign: 'center', marginTop: '20px' }}>Loading tasks...</p>
+                    ) : filteredTasks.length === 0 ? (
+                        <div className="empty-state">
+                            <p>No tasks for this day.</p>
+                            <span className="empty-hint">Enjoy your free time!</span>
+                        </div>
                     ) : (
-                        tasks.map((task) => (
+                        filteredTasks.map((task) => (
                             <div
                                 key={task._id}
-                                className="draggable-task"
+                                className={`draggable-task ${task.status === 'completed' ? 'completed' : ''}`}
                                 onDragStart={(event) => onDragStart(event, task)}
                                 draggable
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <h4>{task.title}</h4>
-                                    <GripVertical size={16} color="#6b7280" />
+                                    <h4 style={task.status === 'completed' ? { textDecoration: 'line-through', opacity: 0.7 } : {}}>
+                                        {task.title}
+                                    </h4>
+                                    {task.status === 'completed' ? (
+                                        <Check size={16} color="#4ade80" />
+                                    ) : (
+                                        <GripVertical size={16} color="#6b7280" />
+                                    )}
                                 </div>
-                                <p>{new Date(task.deadline).toLocaleDateString()}</p>
-                                <span className={`priority-badge priority-${task.priority.toLowerCase()}`}>
-                                    {task.priority}
-                                </span>
+                                <p>{new Date(task.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                <div className="task-meta">
+                                    <span className={`priority-badge priority-${task.priority.toLowerCase()}`}>
+                                        {task.priority}
+                                    </span>
+                                    {task.status === 'completed' && (
+                                        <span className="status-badge completed">Done</span>
+                                    )}
+                                </div>
                             </div>
                         ))
                     )}
