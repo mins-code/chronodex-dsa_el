@@ -1,0 +1,14 @@
+/* Dashboard-specific Header Positioning */
+.dashboard .header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 250px;
+    z-index: 999;
+}
+
+/* Add padding to dashboard content to account for fixed header */
+.dashboard {
+    padding-top: 70px;
+    /* Header height */
+}

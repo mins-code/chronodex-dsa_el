@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import Header from './Header';
 import TaskDistributionGraph from './TaskDistributionGraph';
 import TaskSearch from './TaskSearch';
 import PriorityQueueView from './PriorityQueueView';
 import { getPriorityTasks, getTasks } from '../api';
 import './Dashboard.css';
 
-const Dashboard = ({ user }) => {
+const Dashboard = ({ user, onLogout }) => {
   const [mostUrgentTask, setMostUrgentTask] = useState(null);
 
   const [dailyPendingCount, setDailyPendingCount] = useState(0);
@@ -51,17 +52,17 @@ const Dashboard = ({ user }) => {
 
   return (
     <div className="dashboard">
-      <header className="app-header">
-        <div className="title-group">
-          <h1 className="gradient-text">ChronoDeX</h1>
-          <p className="welcome-message">Welcome back, {user?.username || 'Traveler'}!</p>
-          <div style={{ marginTop: '10px', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-            {dailyPendingCount === 0
-              ? "0 pending tasks for today"
-              : `You have ${dailyPendingCount} pending tasks for today`}
-          </div>
+      <Header onLogout={onLogout} />
+      <div className="hero-section">
+        <h1 className="hero-heading">ChronoDeX</h1>
+        <p className="welcome-message">Welcome back, {user?.username || 'Traveler'}!</p>
+        <div className="pending-tasks-text">
+          {dailyPendingCount === 0
+            ? "0 pending tasks for today"
+            : `You have ${dailyPendingCount} pending tasks for today`}
         </div>
-      </header>
+        <div className="scanning-line"></div>
+      </div>
       <div className="dashboard-summary">
         <div className="glass-tile">
           {mostUrgentTask ? (

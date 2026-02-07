@@ -30,7 +30,7 @@
 /* Main Content */
 .main-content {
   flex: 1;
-  margin-left: calc(250px + 2rem);
+  margin-left: 250px;
   padding: 40px 50px;
   background: transparent;
   color: var(--text-primary);
@@ -155,6 +155,8 @@
   .main-content {
     margin-left: 60px;
     padding: 20px;
+    padding-top: 90px;
+    /* Adjusted for header on mobile */
   }
 
   .sidebar-link {
@@ -174,5 +176,8 @@
 
   .main-content {
     margin-left: 0;
+    padding: 15px;
+    padding-top: 85px;
+    /* Adjusted for header on small mobile */
   }
 }

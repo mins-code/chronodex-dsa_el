@@ -2,12 +2,86 @@
   display: flex;
   flex-direction: column;
   gap: 40px;
+  padding-top: 70px;
+  /* Space for fixed header */
+}
+
+/* Dashboard-specific Header Positioning */
+.dashboard .header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 250px;
+  z-index: 999;
 }
 
 .dashboard-summary {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+/* Hero Section Container */
+.hero-section {
+  text-align: left;
+  margin-bottom: 3rem;
+  /* Negative space separation */
+  padding: 0;
+  position: relative;
+}
+
+/* Scanning Line Decoration - Full Width Subtle */
+.scanning-line {
+  width: 100%;
+  height: 1px;
+  background: rgba(148, 163, 184, 0.2);
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
+/* Pending Tasks Text */
+.pending-tasks-text {
+  margin-top: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 400;
+}
+
+/* Hero Heading - Sci-Fi Style */
+.hero-heading {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin: 0;
+  padding: 0;
+
+  /* Vertical Gradient Text - Matching Sidebar */
+  background: linear-gradient(135deg, #38bdf8 0%, #7dd3fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+
+  /* Data-Pulse Animation */
+  animation: dataPulse 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+/* Fade-in Animation */
+@keyframes dataPulse {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(5px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
 
 /* Glass Tile Container */
@@ -95,20 +169,27 @@
   border: 1px solid rgba(56, 189, 248, 0.3);
 }
 
-/* Header Gradient Text */
-.gradient-text {
-  background: linear-gradient(to right, #22d3ee, #3b82f6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
-  display: inline-block;
-}
-
 /* Welcome Message */
 .welcome-message {
   font-size: 1.1rem;
   color: var(--text-secondary);
   margin-top: 0.5rem;
   font-weight: 500;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  animation: fadeIn 0.8s ease-out forwards;
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

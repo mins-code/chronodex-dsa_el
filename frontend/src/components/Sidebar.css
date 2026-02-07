@@ -2,7 +2,7 @@
 
 .sidebar {
   width: 250px;
-  height: calc(100vh - 2rem);
+  height: 100vh;
   background: var(--glass-bg);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -11,11 +11,11 @@
   display: flex;
   flex-direction: column;
   position: fixed;
-  left: 1rem;
-  top: 1rem;
+  left: 0;
+  top: 0;
   margin: 0;
-  padding: 20px;
-  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  border-radius: 0;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
     0 0 40px rgba(56, 189, 248, 0.08);
   z-index: 1000;
@@ -42,62 +42,7 @@
   background-clip: text;
 }
 
-/* User Profile Section with Glass Styling */
-.sidebar-user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  margin-bottom: 24px;
-  transition: all 0.3s ease;
-}
 
-.sidebar-user:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(56, 189, 248, 0.3);
-}
-
-.user-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
-}
-
-.user-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.user-name {
-  font-weight: 600;
-  font-size: 0.95em;
-  margin: 0 0 4px 0;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-email {
-  font-size: 0.8em;
-  margin: 0;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
 /* Navigation Links Container */
 .sidebar-nav {
@@ -163,73 +108,7 @@
   filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.8));
 }
 
-/* Footer Section */
-.sidebar-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: auto;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
 
-/* Glass Undo Button */
-.undo-btn {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(14, 165, 233, 0.2) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  color: #38bdf8;
-  padding: 12px 15px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-  width: 100%;
-  font-weight: 600;
-}
-
-.undo-btn:hover {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.3) 0%, rgba(14, 165, 233, 0.3) 100%);
-  border-color: #38bdf8;
-  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
-  transform: translateY(-2px);
-}
-
-.undo-btn:active {
-  transform: translateY(0);
-}
-
-/* Glass Logout Button */
-.logout-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
-  padding: 12px 15px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-  width: 100%;
-  font-weight: 600;
-}
-
-.logout-btn:hover {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.3) 100%);
-  border-color: #ef4444;
-  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-  transform: translateY(-2px);
-}
-
-.logout-btn:active {
-  transform: translateY(0);
-}
 
 /* Custom Scrollbar for Sidebar */
 .sidebar::-webkit-scrollbar {

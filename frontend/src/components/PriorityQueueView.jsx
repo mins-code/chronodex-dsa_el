@@ -98,7 +98,12 @@ const PriorityQueueView = () => {
 
   return (
     <div className="priority-queue-view">
-      <h2>All Tasks</h2>
+      <div className="header-with-undo">
+        <h2>All Tasks</h2>
+        <button className="undo-delete-btn" onClick={handleUndo} disabled={!undoInfo?.show}>
+          ↩ Undo Delete
+        </button>
+      </div>
       <div className="task-cards-grid">
         {sortedTasks.map((task) => {
           if (!task) return null;
@@ -156,12 +161,6 @@ const PriorityQueueView = () => {
           );
         })}
       </div>
-      {undoInfo?.show && (
-        <div className="undo-toast">
-          Task deleted.
-          <button className="undo-btn-inline" onClick={handleUndo}>Undo</button>
-        </div>
-      )}
     </div>
   );
 };

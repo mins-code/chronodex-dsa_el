@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import TaskSearch from './components/TaskSearch';
 import PriorityQueueView from './components/PriorityQueueView';
@@ -61,7 +62,7 @@ function App() {
             <ProtectedRoute>
               <div className="app-layout">
                 {/* Sidebar */}
-                <Sidebar user={user} onLogout={handleLogout} />
+                <Sidebar />
 
                 {/* Main Content */}
                 <div className="main-content">
@@ -71,7 +72,7 @@ function App() {
                     {/* Dashboard Route */}
                     <Route
                       path="/"
-                      element={<Dashboard user={user} />}
+                      element={<Dashboard user={user} onLogout={handleLogout} />}
                     />
 
                     {/* Create Task Route */}
