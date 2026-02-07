@@ -9,6 +9,7 @@ export const TaskProvider = ({ children, user }) => {
     const [tasks, setTasks] = useState([]);
     const [suggestedBufferTime, setSuggestedBufferTime] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [insightsInvalidated, setInsightsInvalidated] = useState(false);
 
     const fetchTasks = useCallback(async () => {
         if (!user) {
@@ -28,12 +29,30 @@ export const TaskProvider = ({ children, user }) => {
         }
     }, [user]);
 
+    // Function to invalidate insights when a task is completed
+    const invalidateInsights = useCallback(() => {
+        setInsightsInvalidated(true);
+    }, []);
+
+    // Function to reset invalidation flag (called by InsightsHub after refetch)
+    const resetInsightsInvalidation = useCallback(() => {
+        setInsightsInvalidated(false);
+    }, []);
+
     useEffect(() => {
         fetchTasks();
     }, [user]);
 
     return (
-        <TaskContext.Provider value={{ tasks, suggestedBufferTime, loading, fetchTasks }}>
+        <TaskContext.Provider value={{
+            tasks,
+            suggestedBufferTime,
+            loading,
+            fetchTasks,
+            insightsInvalidated,
+            invalidateInsights,
+            resetInsightsInvalidation
+        }}>
             {children}
         </TaskContext.Provider>
     );

@@ -211,6 +211,17 @@ export const getEfficiencyAnalytics = async () => {
   }
 };
 
+// Get productivity insights (Analytics Engine)
+export const getProductivityInsights = async () => {
+  try {
+    const response = await api.get('/analytics/insights');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching productivity insights:', error);
+    throw error;
+  }
+};
+
 // Get dependency bottlenecks
 export const getDependencyBottlenecks = async () => {
   try {

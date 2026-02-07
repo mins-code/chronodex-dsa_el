@@ -97,6 +97,9 @@ const updateTask = async (req, res) => {
       const finalDeadline = updates.deadline || task.deadline;
       const finalDuration = updates.duration || task.duration;
 
+      // Set completedAt timestamp
+      updates.completedAt = new Date();
+
       console.log(`[DEBUG] updateTask: Entering actualDuration calculation. Deadline: ${finalDeadline}, Duration: ${finalDuration}`);
       if (finalDeadline && finalDuration) {
         const durationInMs = finalDuration * 60 * 1000;

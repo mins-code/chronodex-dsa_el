@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import './PriorityQueueView.css';
 
 const PriorityQueueView = () => {
-  const { tasks, fetchTasks, loading } = useTasks(); // Consume context
+  const { tasks, fetchTasks, loading, invalidateInsights } = useTasks(); // Consume context
   const [undoInfo, setUndoInfo] = useState(null);
   const navigate = useNavigate();
 
@@ -50,6 +50,11 @@ const PriorityQueueView = () => {
     try {
       await updateTaskStatus(taskId, newStatus);
       fetchTasks(); // Refresh context
+
+      // Invalidate insights when task is completed
+      if (newStatus === 'completed' && invalidateInsights) {
+        invalidateInsights();
+      }
     } catch (error) {
       const errorMessage = error.response?.data?.error || 'Failed to update task status.';
       alert(errorMessage);

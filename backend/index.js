@@ -25,6 +25,7 @@ console.log('Registering taskRouter at /api/tasks');
 const taskRouter = require('./routes/taskRoutes');
 const authRouter = require('./routes/authRoutes');
 const notificationRouter = require('./routes/notificationRoutes');
+const analyticsRouter = require('./routes/analyticsRoutes');
 
 app.use((req, res, next) => {
   console.log(`Incoming request: ${req.method} ${req.url}`);
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 app.use('/api/tasks', taskRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/notifications', notificationRouter);
+app.use('/api/analytics', analyticsRouter);
 
 // A simple route to test if the server is working
 app.get('/', (req, res) => {

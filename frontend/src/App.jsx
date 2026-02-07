@@ -18,6 +18,7 @@ import SettingsPage from './components/SettingsPage';
 import Planner from './components/Planner';
 import CalendarView from './components/CalendarView';
 import TaskDetail from './components/TaskDetail';
+import InsightsHub from './components/InsightsHub';
 import './App.css';
 
 function App() {
@@ -129,6 +130,16 @@ function App() {
                           <div className="planner-page">
                             <h2>Task Planner</h2>
                             <Planner />
+                          </div>
+                        }
+                      />
+
+                      {/* Insights Hub Route */}
+                      <Route
+                        path="/insights"
+                        element={
+                          <div className="insights-page">
+                            <InsightsHub />
                           </div>
                         }
                       />

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Calendar, PlusCircle, GitBranch, Bell, Workflow } from 'lucide-react';
+import { LayoutDashboard, Calendar, PlusCircle, GitBranch, Bell, Workflow, BarChart3 } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = () => {
@@ -30,6 +30,10 @@ const Sidebar = () => {
         <NavLink to="/planner" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
           <Workflow size={20} className="sidebar-icon" />
           Planner
+        </NavLink>
+        <NavLink to="/insights" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+          <BarChart3 size={20} className="sidebar-icon" />
+          Insights
         </NavLink>
       </nav>
     </div>

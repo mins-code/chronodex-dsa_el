@@ -44,6 +44,9 @@ const taskSchema = new Schema(
         ref: 'Task',
       },
     ],
+    completedAt: {
+      type: Date,
+    },
     priorityScore: {
       type: Number,
     },
