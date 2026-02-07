@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { createTask } from '../api';
+import { createTask, getEfficiencyAnalytics } from '../api';
 import { useTasks } from '../context/TaskContext'; // Import context
-import { Calendar, Clock, AlertCircle, FileText, Edit } from 'lucide-react';
+import { Calendar, Clock, AlertCircle, FileText, Edit, TrendingUp } from 'lucide-react';
 import './TaskForm.css';
 
 const TaskForm = (props) => {
@@ -34,6 +34,7 @@ const TaskForm = (props) => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
   const [showBufferWarning, setShowBufferWarning] = useState(false);
+  const [efficiencyData, setEfficiencyData] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,6 +42,47 @@ const TaskForm = (props) => {
       ...prevData,
       [name]: value,
     }));
+  };
+
+  // Fetch efficiency analytics on mount
+  useEffect(() => {
+    const fetchEfficiency = async () => {
+      try {
+        const data = await getEfficiencyAnalytics();
+        setEfficiencyData(data);
+      } catch (error) {
+        // Silent fail - efficiency feedback is optional
+        console.log('Could not fetch efficiency data');
+      }
+    };
+    fetchEfficiency();
+  }, []);
+
+  // Calculate performance message
+  const getPerformanceMessage = () => {
+    if (!efficiencyData || efficiencyData.percentage === undefined) return null;
+
+    const efficiency = parseFloat(efficiencyData.percentage);
+
+    // If efficiency is negative, user is working faster
+    if (efficiency < 0) {
+      const fasterPercent = Math.abs(efficiency).toFixed(0);
+      return {
+        type: 'positive',
+        message: `You're ${fasterPercent}% faster than estimated! 🚀`
+      };
+    } else if (efficiency > 0 && efficiency <= 20) {
+      return {
+        type: 'neutral',
+        message: `You're ${efficiency.toFixed(0)}% slower than estimated. Consider adding buffer time.`
+      };
+    } else if (efficiency > 20) {
+      return {
+        type: 'warning',
+        message: `Tasks take ${efficiency.toFixed(0)}% longer than estimated. Adjust your estimates!`
+      };
+    }
+    return null;
   };
 
 
@@ -177,7 +219,7 @@ const TaskForm = (props) => {
             />
 
             {/* Dynamic Scanning Buffer Warning */}
-            {suggestedBufferTime > 0 && showBufferWarning && (
+            {showBufferWarning && (
               <div className="buffer-scanner-warning">
                 <div className="scanner-line"></div>
                 <div className="scanner-header">
@@ -185,10 +227,24 @@ const TaskForm = (props) => {
                   <span>SYSTEM ADVISORY</span>
                 </div>
                 <div className="scanner-content">
-                  Based on historical analysis, a buffer of <span className="scanner-highlight">{suggestedBufferTime}%</span> is recommended.
+                  {suggestedBufferTime > 0 ? (
+                    <>
+                      Based on historical analysis, a buffer of <span className="scanner-highlight">{suggestedBufferTime}%</span> is recommended.
+                    </>
+                  ) : (
+                    <>
+                      Analyzing your work patterns to provide duration recommendations...
+                    </>
+                  )}
                 </div>
                 <div className="scanner-footer">
-                  EFFICIENCY RATING: CALIBRATING...
+                  {getPerformanceMessage() ? (
+                    <span className={`performance-message ${getPerformanceMessage().type}`}>
+                      <TrendingUp size={14} /> {getPerformanceMessage().message}
+                    </span>
+                  ) : (
+                    'EFFICIENCY RATING: CALIBRATING...'
+                  )}
                 </div>
               </div>
             )}
