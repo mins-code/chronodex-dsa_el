@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Calendar, List, Clock, Plus, Check } from 'lucide-react';
 import { useTasks } from '../context/TaskContext'; // Import context
 import { getEfficiencyAnalytics } from '../api';
+import { calculateDayLoad, getTasksForDate as utilsGetTasksForDate } from '../utils/taskUtils';
 import './CalendarView.css';
 
 const CalendarView = () => {
@@ -75,24 +76,8 @@ const CalendarView = () => {
         return new Date(task.deadline).getHours();
     };
 
-    // Normalize date to YYYY-MM-DD format (UTC to avoid timezone issues)
-    const normalizeDateString = (date) => {
-        const d = new Date(date);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
-
-    // Get tasks for a specific date - improved with better date normalization
-    const getTasksForDate = (date) => {
-        const dateStr = normalizeDateString(date);
-        return tasks.filter(task => {
-            if (!task.deadline) return false;
-            const taskDate = normalizeDateString(task.deadline);
-            return taskDate === dateStr;
-        });
-    };
+    // Wrapper for the imported getTasksForDate utility
+    const getTasksForDate = (date) => utilsGetTasksForDate(tasks, date);
 
     // Handle overlay for days with many tasks
     const handleShowMore = (date, dayTasks) => {
@@ -132,21 +117,20 @@ const CalendarView = () => {
         }
     };
 
-    // Render Monthly View
+    // Wrapper for the imported calculateDayLoad utility
+    const getDayLoadStats = (dayTasks) => {
+        const multiplier = efficiencyStats?.efficiencyMultiplier || 1.1;
+        return calculateDayLoad(dayTasks, multiplier);
+    };
+
+    // Render Monthly View & Legend
     const renderMonthlyView = () => {
-        const getDaysInMonth = (date) => {
-            return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-        };
-
-        const getFirstDayOfMonth = (date) => {
-            return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-        };
-
-        const daysInMonth = getDaysInMonth(currentDate);
-        const firstDay = getFirstDayOfMonth(currentDate);
+        const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+        const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
         const days = [];
 
-        for (let i = 0; i < firstDay; i++) {
+        // Previous month filler
+        for (let i = 0; i < firstDayOfMonth; i++) {
             days.push({ day: null, isCurrentMonth: false, tasks: [] });
         }
 
@@ -158,60 +142,92 @@ const CalendarView = () => {
                 currentDate.getFullYear() === new Date().getFullYear();
 
             const dayTasks = getTasksForDate(date);
-            days.push({ day, isCurrentMonth: true, isToday, tasks: dayTasks, date });
+            const loadStats = getDayLoadStats(dayTasks);
+
+            days.push({ day, isCurrentMonth: true, isToday, tasks: dayTasks, date, loadStats });
         }
 
         return (
-            <div className="calendar-grid monthly-grid">
-                {dayNames.map((dayName) => (
-                    <div key={dayName} className="day-name">{dayName}</div>
-                ))}
-                {days.map((dayObj, index) => (
-                    <div
-                        key={index}
-                        className={`day-tile ${!dayObj.isCurrentMonth ? 'empty' : ''} ${dayObj.isToday ? 'today' : ''
-                            } ${dayObj.tasks.length > 0 ? 'has-tasks' : ''}`}
-                        onClick={() => {
-                            if (dayObj.isCurrentMonth) {
-                                setSelectedDate(dayObj.date);
-                                handleShowMore(dayObj.date, dayObj.tasks);
-                            }
-                        }}
-                    >
-                        {/* Date number in top-right corner */}
-                        <div className="day-number-corner">{dayObj.day}</div>
+            <>
+                <div className="calendar-grid monthly-grid">
+                    {dayNames.map((dayName) => (
+                        <div key={dayName} className="day-name">{dayName}</div>
+                    ))}
+                    {days.map((dayObj, index) => (
+                        <div
+                            key={index}
+                            className={`day-tile ${!dayObj.isCurrentMonth ? 'empty' : ''} ${dayObj.isToday ? 'today' : ''
+                                } ${dayObj.tasks.length > 0 ? 'has-tasks' : ''} ${dayObj.loadStats ? `load-status-${dayObj.loadStats.status}` : ''}`}
+                            onClick={() => {
+                                if (dayObj.isCurrentMonth) {
+                                    setSelectedDate(dayObj.date);
+                                    handleShowMore(dayObj.date, dayObj.tasks);
+                                }
+                            }}
+                            style={dayObj.loadStats ? { '--status-color': dayObj.loadStats.color } : {}}
+                        >
+                            {/* Focus Load Meter (Top-Left) */}
+                            {dayObj.loadStats && (
+                                <div className="focus-load-meter">
+                                    <div className="meter-dot" style={{ backgroundColor: dayObj.loadStats.color }}></div>
+                                    <div className="meter-mini-label">
+                                        {dayObj.loadStats.taskCount} tasks · {dayObj.loadStats.formattedTime}
+                                    </div>
+                                </div>
+                            )}
 
-                        {/* Task Pills - Max 2 visible */}
-                        {dayObj.tasks.length > 0 && (
-                            <div className="task-pills-container">
-                                {dayObj.tasks.slice(0, 2).map((task, idx) => (
-                                    <div
-                                        key={task._id || idx}
-                                        className="task-pill"
-                                        style={{
-                                            backgroundColor: getPriorityColor(task.priority)
-                                        }}
-                                        title={`${task.title} (${task.priority || 'Medium'})`}
-                                    >
-                                        <span className="task-pill-text">{task.title}</span>
-                                    </div>
-                                ))}
-                                {dayObj.tasks.length > 2 && (
-                                    <div
-                                        className="task-overflow-pill"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleShowMore(dayObj.date, dayObj.tasks);
-                                        }}
-                                    >
-                                        +{dayObj.tasks.length - 2}
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                            {/* Date number in top-right corner */}
+                            <div className="day-number-corner">{dayObj.day}</div>
+
+                            {/* Task Pills - Max 2 visible */}
+                            {dayObj.tasks.length > 0 && (
+                                <div className="task-pills-container">
+                                    {dayObj.tasks.slice(0, 2).map((task, idx) => (
+                                        <div
+                                            key={task._id || idx}
+                                            className="task-pill"
+                                            style={{
+                                                backgroundColor: getPriorityColor(task.priority)
+                                            }}
+                                            title={`${task.title} (${task.priority || 'Medium'})`}
+                                        >
+                                            <span className="task-pill-text">{task.title}</span>
+                                        </div>
+                                    ))}
+                                    {dayObj.tasks.length > 2 && (
+                                        <div
+                                            className="task-overflow-pill"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleShowMore(dayObj.date, dayObj.tasks);
+                                            }}
+                                        >
+                                            +{dayObj.tasks.length - 2}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Legend */}
+                <div className="focus-load-legend">
+                    <span className="legend-title">FOCUS LOAD:</span>
+                    <div className="legend-item">
+                        <span className="legend-dot" style={{ backgroundColor: '#4ade80' }}></span>
+                        <span>Light (&lt;4h)</span>
                     </div>
-                ))}
-            </div>
+                    <div className="legend-item">
+                        <span className="legend-dot" style={{ backgroundColor: '#facc15' }}></span>
+                        <span>Busy (4-7h)</span>
+                    </div>
+                    <div className="legend-item">
+                        <span className="legend-dot" style={{ backgroundColor: '#ef4444' }}></span>
+                        <span>Overloaded (&gt;7h)</span>
+                    </div>
+                </div>
+            </>
         );
     };
 
@@ -365,86 +381,124 @@ const CalendarView = () => {
         };
 
         return (
-            <div className="weekly-view">
-                <div className="weekly-grid-header">
-                    <div className="time-column-header"></div>
-                    {weekDays.map((date, idx) => {
-                        const isToday = date.toDateString() === new Date().toDateString();
-                        return (
-                            <div key={idx} className={`day-column-header ${isToday ? 'today-header' : ''}`}>
-                                <div className="day-name-short">{dayNames[date.getDay()]}</div>
-                                <div className="day-date">{date.getDate()}</div>
-                            </div>
-                        );
-                    })}
-                </div>
+            <>
+                <div className="weekly-view">
+                    <div className="weekly-grid-header">
+                        <div className="time-column-header"></div>
+                        {weekDays.map((date, idx) => {
+                            const isToday = date.toDateString() === new Date().toDateString();
+                            const dayTasks = getTasksForDate(date);
+                            const loadStats = calculateDayLoad(dayTasks);
 
-                <div className="weekly-grid-body">
-                    {/* Time Column */}
-                    <div className="time-column">
-                        {hours.map(hour => (
-                            <div key={hour} className="time-slot" style={{ height: '60px', position: 'relative' }}>
-                                <span className="time-label" style={{ position: 'absolute', top: '-6px', right: '4px', fontSize: '0.7rem', color: '#64748b' }}>
-                                    {hour.toString().padStart(2, '0')}:00
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Days Columns */}
-                    {weekDays.map((date, dayIndex) => {
-                        const dayTasks = getTasksForDate(date);
-                        const isToday = date.toDateString() === new Date().toDateString();
-
-                        return (
-                            <div key={dayIndex} className={`day-column-body ${isToday ? 'today-column' : ''}`} style={{ position: 'relative', height: `${24 * 60}px` }}>
-                                {/* Background Grid Lines */}
-                                {hours.map(hour => (
-                                    <div key={hour} className="grid-line" style={{ height: '60px', borderBottom: '1px solid rgba(56, 189, 248, 0.1)', boxSizing: 'border-box' }}></div>
-                                ))}
-
-                                {/* Tasks Layer */}
-                                {dayTasks.map((task, idx) => {
-                                    const styles = getWeeklyTaskStyle(task);
-                                    return (
-                                        <div
-                                            key={task._id || idx}
-                                            className="weekly-task-item-container"
-                                            style={styles.container}
-                                            title=""
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigateToRoute(`/tasks/${task._id}`);
-                                            }}
-                                            onMouseEnter={(e) => handleTaskMouseEnter(e, task, styles.bufferDuration)}
-                                            onMouseLeave={handleTaskMouseLeave}
-                                        >
-                                            {/* Visual Layer (Backgrounds) */}
-                                            <div style={styles.visualLayer}>
-                                                <div style={styles.coreBg}></div>
-                                                {/* Render buffer only if it exists */}
-                                                {(efficiencyStats?.efficiencyMultiplier > 1) && (
-                                                    <div style={styles.bufferBg}></div>
-                                                )}
-                                            </div>
-
-                                            {/* Content Layer (Text) */}
-                                            <div style={styles.content}>
-                                                <div className="task-title-row">
-                                                    {styles.isCompleted && <Check size={12} style={{ marginRight: '4px', display: 'inline' }} strokeWidth={3} />}
-                                                    <span className="weekly-task-title" style={styles.isCompleted ? { textDecoration: 'line-through', opacity: 0.9 } : {}}>
-                                                        {task.title}
-                                                    </span>
-                                                </div>
+                            return (
+                                <div
+                                    key={idx}
+                                    className={`day-column-header ${isToday ? 'today-header' : ''}`}
+                                    style={loadStats ? {
+                                        position: 'relative',
+                                        borderTop: `3px solid ${loadStats.color}`
+                                    } : { position: 'relative' }}
+                                >
+                                    {/* Focus Meter for Weekly Column */}
+                                    {loadStats && (
+                                        <div className="focus-load-meter" style={{ top: '2px', left: '4px', transform: 'scale(0.85)', transformOrigin: 'top left' }}>
+                                            <div className="meter-dot" style={{ backgroundColor: loadStats.color }}></div>
+                                            <div className="meter-mini-label" style={{ fontSize: '0.6rem' }}>
+                                                {loadStats.formattedTime}
                                             </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        );
-                    })}
+                                    )}
+                                    <div className="day-name-short" style={{ marginTop: '12px' }}>{dayNames[date.getDay()]}</div>
+                                    <div className="day-date">{date.getDate()}</div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="weekly-grid-body">
+                        {/* Time Column */}
+                        <div className="time-column">
+                            {hours.map(hour => (
+                                <div key={hour} className="time-slot" style={{ height: '60px', position: 'relative' }}>
+                                    <span className="time-label" style={{ position: 'absolute', top: '-6px', right: '4px', fontSize: '0.7rem', color: '#64748b' }}>
+                                        {hour.toString().padStart(2, '0')}:00
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Days Columns */}
+                        {weekDays.map((date, dayIndex) => {
+                            const dayTasks = getTasksForDate(date);
+                            const isToday = date.toDateString() === new Date().toDateString();
+
+                            return (
+                                <div key={dayIndex} className={`day-column-body ${isToday ? 'today-column' : ''}`} style={{ position: 'relative', height: `${24 * 60}px` }}>
+                                    {/* Background Grid Lines */}
+                                    {hours.map(hour => (
+                                        <div key={hour} className="grid-line" style={{ height: '60px', borderBottom: '1px solid rgba(56, 189, 248, 0.1)', boxSizing: 'border-box' }}></div>
+                                    ))}
+
+                                    {/* Tasks Layer */}
+                                    {dayTasks.map((task, idx) => {
+                                        const styles = getWeeklyTaskStyle(task);
+                                        return (
+                                            <div
+                                                key={task._id || idx}
+                                                className="weekly-task-item-container"
+                                                style={styles.container}
+                                                title=""
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigateToRoute(`/tasks/${task._id}`);
+                                                }}
+                                                onMouseEnter={(e) => handleTaskMouseEnter(e, task, styles.bufferDuration)}
+                                                onMouseLeave={handleTaskMouseLeave}
+                                            >
+                                                {/* Visual Layer (Backgrounds) */}
+                                                <div style={styles.visualLayer}>
+                                                    <div style={styles.coreBg}></div>
+                                                    {/* Render buffer only if it exists */}
+                                                    {(efficiencyStats?.efficiencyMultiplier > 1) && (
+                                                        <div style={styles.bufferBg}></div>
+                                                    )}
+                                                </div>
+
+                                                {/* Content Layer (Text) */}
+                                                <div style={styles.content}>
+                                                    <div className="task-title-row">
+                                                        {styles.isCompleted && <Check size={12} style={{ marginRight: '4px', display: 'inline' }} strokeWidth={3} />}
+                                                        <span className="weekly-task-title" style={styles.isCompleted ? { textDecoration: 'line-through', opacity: 0.9 } : {}}>
+                                                            {task.title}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>
+
+                {/* Legend */}
+                <div className="focus-load-legend">
+                    <span className="legend-title">FOCUS LOAD:</span>
+                    <div className="legend-item">
+                        <span className="legend-dot" style={{ backgroundColor: '#4ade80' }}></span>
+                        <span>Light (&lt;4h)</span>
+                    </div>
+                    <div className="legend-item">
+                        <span className="legend-dot" style={{ backgroundColor: '#facc15' }}></span>
+                        <span>Busy (4-7h)</span>
+                    </div>
+                    <div className="legend-item">
+                        <span className="legend-dot" style={{ backgroundColor: '#ef4444' }}></span>
+                        <span>Overloaded (&gt;7h)</span>
+                    </div>
+                </div>
+            </>
         );
     };
 
@@ -452,6 +506,7 @@ const CalendarView = () => {
     const renderDailyView = () => {
         const dayTasks = getTasksForDate(selectedDate);
         const hours = Array.from({ length: 24 }, (_, i) => i);
+        const loadStats = calculateDayLoad(dayTasks);
 
         // Helper for Daily Task Style
         const getDailyTaskStyle = (task) => {
@@ -535,66 +590,94 @@ const CalendarView = () => {
         };
 
         return (
-            <div className="daily-view">
-                <div className="daily-header">
-                    <h3>{dayNamesFull[selectedDate.getDay()]}, {monthNames[selectedDate.getMonth()]} {selectedDate.getDate()}</h3>
-                </div>
+            <>
+                <div className="daily-view">
+                    <div className="daily-header" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <h3>{dayNamesFull[selectedDate.getDay()]}, {monthNames[selectedDate.getMonth()]} {selectedDate.getDate()}</h3>
 
-                <div className="daily-timeline-container" style={{ position: 'relative', height: '100%', overflowY: 'auto' }}>
-                    <div className="timeline-content" style={{ position: 'relative', height: `${24 * 60}px` }}>
-
-                        {/* Time Slots & Grid Lines */}
-                        {hours.map(hour => (
-                            <div key={hour} className="daily-hour-slot" style={{ height: '60px', display: 'flex', position: 'absolute', top: `${hour * 60}px`, width: '100%' }}>
-                                <div className="daily-time-label" style={{ width: '60px', textAlign: 'right', paddingRight: '10px', color: '#94a3b8', fontSize: '0.75rem', transform: 'translateY(-50%)' }}>
-                                    {hour.toString().padStart(2, '0')}:00
-                                </div>
-                                <div className="daily-grid-line" style={{ flex: 1, borderTop: '1px solid rgba(56, 189, 248, 0.1)', width: '100%' }}></div>
+                        {/* Focus Meter for Daily View Header */}
+                        {loadStats && (
+                            <div className="focus-load-meter-daily" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '20px', border: `1px solid ${loadStats.color}40` }}>
+                                <div className="meter-dot" style={{ backgroundColor: loadStats.color, width: '10px', height: '10px' }}></div>
+                                <span style={{ color: loadStats.color, fontWeight: 'bold', fontSize: '0.9rem' }}>{loadStats.label}</span>
+                                <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>({loadStats.taskCount} tasks · {loadStats.formattedTime})</span>
                             </div>
-                        ))}
+                        )}
+                    </div>
 
-                        {/* Tasks Layer */}
-                        <div className="daily-tasks-layer">
-                            {dayTasks.map((task, idx) => {
-                                const styles = getDailyTaskStyle(task);
-                                return (
-                                    <div
-                                        key={task._id || idx}
-                                        className="daily-task-item-container"
-                                        style={styles.container}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigateToRoute(`/tasks/${task._id}`);
-                                        }}
-                                        onMouseEnter={(e) => handleTaskMouseEnter(e, task, styles.bufferDuration)}
-                                        onMouseLeave={handleTaskMouseLeave}
-                                        title="" // Clear default title to avoid double tooltip
-                                    >
-                                        {/* Visual Layer */}
-                                        <div style={styles.visualLayer}>
-                                            <div style={styles.coreBg}></div>
-                                            {(efficiencyStats?.efficiencyMultiplier > 1) && (
-                                                <div style={styles.bufferBg}></div>
-                                            )}
-                                        </div>
+                    <div className="daily-timeline-container" style={{ position: 'relative', height: '100%', overflowY: 'auto' }}>
+                        <div className="timeline-content" style={{ position: 'relative', height: `${24 * 60}px` }}>
 
-                                        {/* Content Layer */}
-                                        <div style={styles.content}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                {styles.isCompleted && <Check size={14} strokeWidth={3} />}
-                                                <span className="daily-task-title" style={{ fontSize: '0.95rem', fontWeight: 700, ...(styles.isCompleted ? { textDecoration: 'line-through', opacity: 0.9 } : {}) }}>
-                                                    {task.title}
-                                                </span>
-                                            </div>
-                                            {task.description && <span className="daily-task-desc" style={{ fontSize: '0.8rem', opacity: 0.9, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.description}</span>}
-                                        </div>
+                            {/* Time Slots & Grid Lines */}
+                            {hours.map(hour => (
+                                <div key={hour} className="daily-hour-slot" style={{ height: '60px', display: 'flex', position: 'absolute', top: `${hour * 60}px`, width: '100%' }}>
+                                    <div className="daily-time-label" style={{ width: '60px', textAlign: 'right', paddingRight: '10px', color: '#94a3b8', fontSize: '0.75rem', transform: 'translateY(-50%)' }}>
+                                        {hour.toString().padStart(2, '0')}:00
                                     </div>
-                                );
-                            })}
+                                    <div className="daily-grid-line" style={{ flex: 1, borderTop: '1px solid rgba(56, 189, 248, 0.1)', width: '100%' }}></div>
+                                </div>
+                            ))}
+
+                            {/* Tasks Layer */}
+                            <div className="daily-tasks-layer">
+                                {dayTasks.map((task, idx) => {
+                                    const styles = getDailyTaskStyle(task);
+                                    return (
+                                        <div
+                                            key={task._id || idx}
+                                            className="daily-task-item-container"
+                                            style={styles.container}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigateToRoute(`/tasks/${task._id}`);
+                                            }}
+                                            onMouseEnter={(e) => handleTaskMouseEnter(e, task, styles.bufferDuration)}
+                                            onMouseLeave={handleTaskMouseLeave}
+                                            title="" // Clear default title to avoid double tooltip
+                                        >
+                                            {/* Visual Layer */}
+                                            <div style={styles.visualLayer}>
+                                                <div style={styles.coreBg}></div>
+                                                {(efficiencyStats?.efficiencyMultiplier > 1) && (
+                                                    <div style={styles.bufferBg}></div>
+                                                )}
+                                            </div>
+
+                                            {/* Content Layer */}
+                                            <div style={styles.content}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    {styles.isCompleted && <Check size={14} strokeWidth={3} />}
+                                                    <span className="daily-task-title" style={{ fontSize: '0.95rem', fontWeight: 700, ...(styles.isCompleted ? { textDecoration: 'line-through', opacity: 0.9 } : {}) }}>
+                                                        {task.title}
+                                                    </span>
+                                                </div>
+                                                {task.description && <span className="daily-task-desc" style={{ fontSize: '0.8rem', opacity: 0.9, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.description}</span>}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+
+                {/* Legend */}
+                <div className="focus-load-legend">
+                    <span className="legend-title">FOCUS LOAD:</span>
+                    <div className="legend-item">
+                        <span className="legend-dot" style={{ backgroundColor: '#4ade80' }}></span>
+                        <span>Light (&lt;4h)</span>
+                    </div>
+                    <div className="legend-item">
+                        <span className="legend-dot" style={{ backgroundColor: '#facc15' }}></span>
+                        <span>Busy (4-7h)</span>
+                    </div>
+                    <div className="legend-item">
+                        <span className="legend-dot" style={{ backgroundColor: '#ef4444' }}></span>
+                        <span>Overloaded (&gt;7h)</span>
+                    </div>
+                </div>
+            </>
         );
     };
 

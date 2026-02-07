@@ -334,7 +334,7 @@ const Planner = () => {
                         <span className="current-date" onClick={handleToday} title="Go to Today">
                             {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
-                        <button onClick={handleNextDay} className="nav-btn" title="Next Day">
+                        <button onClick={handleNextDay} className="nav-btn" title="Day After">
                             <ChevronRight size={16} />
                         </button>
                     </div>

@@ -5,7 +5,7 @@ import { useTasks } from '../context/TaskContext'; // Import context
 import { Calendar, Clock, AlertCircle, FileText, Edit } from 'lucide-react';
 import './TaskForm.css';
 
-const TaskForm = () => {
+const TaskForm = (props) => {
   const { suggestedBufferTime, fetchTasks } = useTasks(); // Consume context
   const location = useLocation();
   const selectedDate = location.state?.selectedDate;
@@ -43,6 +43,7 @@ const TaskForm = () => {
     }));
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setWarning(null);
@@ -54,6 +55,11 @@ const TaskForm = () => {
 
       // Refresh tasks in context
       fetchTasks();
+
+      // Trigger parent callback if provided (for dynamic meter updates)
+      if (props.onTaskUpdate) {
+        props.onTaskUpdate();
+      }
 
       // Success - clear the form
       setSuccessMessage(`✓ Task "${formData.title}" created successfully!`);

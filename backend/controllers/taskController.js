@@ -449,4 +449,98 @@ const getEfficiencyAnalytics = async (req, res) => {
   }
 };
 
-module.exports = { createTask, completeTask, deleteTask, undoDelete, clearAllTasks, getTasks, updateTask, getEfficiencyAnalytics };
+// Calculate Daily Load
+const calculateDailyLoad = async (req, res) => {
+  try {
+    const { date } = req.query; // Expecting YYYY-MM-DD
+    const userId = req.userId;
+
+    // 1. Determine date range (start to end of the specific day)
+    const targetDate = date ? new Date(date) : new Date();
+    const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+
+    // 2. Fetch tasks for this day
+    // We filter by deadline falling within this day
+    const dayTasks = await Task.find({
+      userId,
+      deadline: { $gte: startOfDay, $lte: endOfDay },
+      status: { $ne: 'completed' } // Only count active tasks? Or all? User said "daily load", usually implies active work. Let's assume active for "load".
+      // Actually, for "load" it might refer to total planned work. 
+      // User prompt says: "sum (estimatedDuration ...)". If I did it, it's done. 
+      // But typically "daily load" helps you plan *upcoming* work. 
+      // Let's include ALL tasks for that day to show TOTAL planned load, maybe?
+      // "Return a JSON object for each day containing... status: Light/Busy/Overloaded"
+      // If I finished a heavy task, my day *was* overloaded.
+      // Let's stick to ALL tasks due on that day to represent the "Daily Schedule Load".
+    });
+
+    // 3. Get User Efficiency (Buffer Multiplier)
+    // calculateTimeDeviation returns a percentage (e.g. 20) or object if requested.
+    // We need the multiplier.
+    // The UserPatternAnalyzer has 'calculateTimeDeviation'.
+    // It returns 'result' (percentage) by default. 
+    // We need to call it with true for details? No, let's just get the percentage and convert.
+    // actually getEfficiencyAnalytics uses `calculateTimeDeviation(userId, true)`.
+    // Let's do that.
+
+    // Calculate total hours logic
+    const weights = { Critical: 2.0, High: 1.5, Medium: 1.0, Low: 0.5 };
+
+    // Fetch efficiency stats
+    // Note: calculateTimeDeviation is async
+    const efficiencyStats = await calculateTimeDeviation(userId, true);
+    // If error or no data, default multiplier to 1.1 (10% buffer)
+    const bufferMultiplier = efficiencyStats && efficiencyStats.efficiencyMultiplier
+      ? efficiencyStats.efficiencyMultiplier
+      : 1.1;
+
+    let totalWeightedMinutes = 0;
+
+    dayTasks.forEach(task => {
+      const duration = task.estimatedDuration || task.duration || 30; // Default 30 min
+      const weight = weights[task.priority] || 1.0;
+
+      // Formula: (estimatedDuration * priorityWeight) * bufferMultiplier
+      const weightedTaskLoad = (duration * weight) * bufferMultiplier;
+      totalWeightedMinutes += weightedTaskLoad;
+    });
+
+    const totalHours = totalWeightedMinutes / 60;
+
+    // Determine Status
+    let status = '🟢 Light';
+    if (totalHours > 7) status = '🔴 Overloaded';
+    else if (totalHours >= 4) status = '🟡 Busy';
+
+    // Format Total Time
+    const hours = Math.floor(totalHours);
+    const minutes = Math.round((totalHours - hours) * 60);
+    const totalTimeWithBuffer = `${hours}h ${minutes}m`;
+
+    res.status(200).json({
+      date: startOfDay.toISOString().split('T')[0],
+      loadScore: parseFloat(totalWeightedMinutes.toFixed(2)),
+      status,
+      totalTimeWithBuffer,
+      taskCount: dayTasks.length,
+      bufferMultiplier: parseFloat(bufferMultiplier.toFixed(2))
+    });
+
+  } catch (error) {
+    console.error('Error calculating daily load:', error);
+    res.status(500).json({ error: 'Failed to calculate daily load.' });
+  }
+};
+
+module.exports = {
+  createTask,
+  completeTask,
+  deleteTask,
+  undoDelete,
+  clearAllTasks,
+  getTasks,
+  updateTask,
+  getEfficiencyAnalytics,
+  calculateDailyLoad
+};

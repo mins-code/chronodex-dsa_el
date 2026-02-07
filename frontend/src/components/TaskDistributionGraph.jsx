@@ -3,7 +3,7 @@ import { getTaskDistribution } from '../api';
 import { Calendar, TrendingUp } from 'lucide-react';
 import './TaskDistributionGraph.css';
 
-const TaskDistributionGraph = () => {
+const TaskDistributionGraph = ({ forecast }) => {
   const [distribution, setDistribution] = useState({});
   const [loading, setLoading] = useState(true);
   const [maxCount, setMaxCount] = useState(0);
@@ -61,7 +61,7 @@ const TaskDistributionGraph = () => {
 
   return (
     <div className="distribution-graph line-chart-mode glass-tile">
-      <div className="graph-header">
+      <div className="graph-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <TrendingUp size={20} color="#38bdf8" />
@@ -69,6 +69,19 @@ const TaskDistributionGraph = () => {
           </h3>
           <span className="subtitle">Next 14 Days Forecast</span>
         </div>
+
+        {/* Forecast Strip */}
+        {forecast && forecast.length > 0 && (
+          <div className="forecast-strip" style={{ display: 'flex', gap: '15px', background: 'rgba(255,255,255,0.03)', padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            {forecast.map((day, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}>
+                <span style={{ color: '#94a3b8' }}>{day.label}:</span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: day.stats?.color || '#333' }}></span>
+                <span style={{ color: day.stats?.color || '#ccc', fontWeight: 600 }}>{day.stats?.label || 'N/A'}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="line-chart-container" ref={graphContainerRef}>
