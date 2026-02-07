@@ -1,60 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { getPriorityTasks, deleteTask, undoDelete, updateTaskStatus } from '../api';
+import { deleteTask, undoDelete, updateTaskStatus } from '../api';
+import { useTasks } from '../context/TaskContext'; // Import context
 import { Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './PriorityQueueView.css';
 
 const PriorityQueueView = () => {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { tasks, fetchTasks, loading } = useTasks(); // Consume context
   const [undoInfo, setUndoInfo] = useState(null);
   const navigate = useNavigate();
 
-  const calculateDynamicScore = (task) => {
-    const priorityMap = { Critical: 0, High: 10, Medium: 20, Low: 30 };
-    const weight = priorityMap[task.priority] !== undefined ? priorityMap[task.priority] : 30;
-    const now = Date.now();
-    const deadline = new Date(task.deadline).getTime();
-    const diffInHours = (deadline - now) / 3600000;
-    return weight + Math.max(0, Math.min(diffInHours, 19));
-  };
+  // Local derived state for sorted tasks (if we want client-side sorting/filtering)
+  // But context tasks are already sorted by priorityScore from backend.
+  // We just need to filter completed/pending if we want specific view.
+  // The original view showed all tasks, sorted pending first.
 
+  // This useEffect handles the undo timer cleanup
   useEffect(() => {
     fetchTasks();
 
-    const intervalId = setInterval(() => {
-      setTasks((prevTasks) => {
-        const sorted = [...prevTasks].sort((a, b) => {
-          const scoreA = calculateDynamicScore(a);
-          const scoreB = calculateDynamicScore(b);
-          return scoreA - scoreB;
-        });
-        return sorted;
-      });
-    }, 60000); // 60 seconds
-
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const fetchTasks = async () => {
-    setLoading(true);
-    try {
-      const priorityTasks = await getPriorityTasks();
-      // Ensure priorityTasks is an array before setting state
-      setTasks(Array.isArray(priorityTasks) ? priorityTasks : []);
-    } catch (error) {
-      setTasks([]);
-    } finally {
-      setLoading(false);
+    if (undoInfo?.timer) {
+      return () => clearTimeout(undoInfo.timer);
     }
-  };
+  }, [undoInfo, fetchTasks]); // Added fetchTasks to dependency array
 
   const handleDelete = async (taskId) => {
     try {
       await deleteTask(taskId);
-      setTasks((prev) => prev.filter((task) => task._id !== taskId));
+      fetchTasks(); // Refresh context
       setUndoInfo({ show: true, timer: null });
-      // Auto-hide undo after 5 seconds
       const timer = setTimeout(() => setUndoInfo(null), 5000);
       setUndoInfo({ show: true, timer });
     } catch (error) {
@@ -66,7 +40,7 @@ const PriorityQueueView = () => {
     try {
       await undoDelete();
       setUndoInfo(null);
-      fetchTasks();
+      fetchTasks(); // Refresh context
     } catch (error) {
       alert('Failed to undo delete.');
     }
@@ -75,8 +49,7 @@ const PriorityQueueView = () => {
   const handleStatusChange = async (taskId, newStatus) => {
     try {
       await updateTaskStatus(taskId, newStatus);
-      // Success: refresh the task list
-      fetchTasks();
+      fetchTasks(); // Refresh context
     } catch (error) {
       const errorMessage = error.response?.data?.error || 'Failed to update task status.';
       alert(errorMessage);
@@ -87,11 +60,7 @@ const PriorityQueueView = () => {
     navigate(`/task/${taskId}`);
   };
 
-  const getPriorityClass = (priority) => {
-    return `priority-${priority}`;
-  };
-
-  if (loading) {
+  if (loading && tasks.length === 0) {
     return <div className="priority-queue-view"><p>Loading tasks...</p></div>;
   }
 
@@ -100,15 +69,16 @@ const PriorityQueueView = () => {
   }
 
   // Sort tasks: non-completed first, completed last
+  // (Context tasks are sorted by priorityScore, but mix completed/pending)
   const sortedTasks = [...tasks].sort((a, b) => {
     const aCompleted = a.status === 'completed';
     const bCompleted = b.status === 'completed';
     if (aCompleted && !bCompleted) return 1;
     if (!aCompleted && bCompleted) return -1;
+    // If both pending or both completed, keep original order (priorityScore)
     return 0;
   });
 
-  // Get status display info
   const getStatusInfo = (status) => {
     const statusMap = {
       'to-do': { label: 'To Do', className: 'status-todo' },

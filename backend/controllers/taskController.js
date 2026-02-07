@@ -77,12 +77,41 @@ const updateTask = async (req, res) => {
         priority: newPriority,
         duration: newDuration
       });
+
+      // Also update estimatedDuration if duration changed
+      if (updates.duration) {
+        updates.estimatedDuration = updates.duration;
+      }
     }
 
     // 2. Handle Title updates (Trie)
     if (updates.title && updates.title !== task.title) {
       taskTrie.insert(task.title, null);
       taskTrie.insert(updates.title, taskId);
+    }
+
+
+    // 3. Handle Status Update to 'completed' (Calculate actualDuration)
+    console.log(`[DEBUG] updateTask: updates.status='${updates.status}', task.status='${task.status}'`);
+    if (updates.status === 'completed' && task.status !== 'completed') {
+      const finalDeadline = updates.deadline || task.deadline;
+      const finalDuration = updates.duration || task.duration;
+
+      console.log(`[DEBUG] updateTask: Entering actualDuration calculation. Deadline: ${finalDeadline}, Duration: ${finalDuration}`);
+      if (finalDeadline && finalDuration) {
+        const durationInMs = finalDuration * 60 * 1000;
+        const startTime = new Date(finalDeadline).getTime() - durationInMs;
+        const endTime = Date.now();
+        const actualDurationMinutes = (endTime - startTime) / (60 * 1000);
+
+        updates.actualDuration = parseFloat(actualDurationMinutes.toFixed(2));
+
+        // Ensure estimatedDuration is present for future calculations
+        if (!task.estimatedDuration && !updates.estimatedDuration) {
+          updates.estimatedDuration = finalDuration;
+        }
+        console.log(`[DEBUG] updateTask: Calculated actualDuration: ${updates.actualDuration} (Est: ${updates.estimatedDuration || task.estimatedDuration})`);
+      }
     }
 
     const updatedTask = await Task.findByIdAndUpdate(taskId, updates, {
@@ -107,6 +136,9 @@ const updateTask = async (req, res) => {
         intervalScheduler.addInterval(startTime, endTime, taskId);
       }
     }
+
+
+
 
     // Enrich response
     const responseTask = updatedTask.toObject();
@@ -147,6 +179,7 @@ const createTask = async (req, res) => {
     const priorityScore = PriorityQueue.calculateScore(deadline, priority);
 
     // Create and save the new task to MongoDB, including priorityScore and userId
+    // Ensure duration is stored in minutes (as received from frontend)
     const newTask = new Task({
       userId: req.userId,
       title,
@@ -154,6 +187,7 @@ const createTask = async (req, res) => {
       deadline,
       priority,
       duration,
+      estimatedDuration: duration, // Set estimatedDuration = duration initially
       prerequisites,
       priorityScore,
     });
@@ -230,6 +264,19 @@ const completeTask = async (req, res) => {
       return res.status(400).json({
         error: 'Cannot complete task. Prerequisites not finished.',
       });
+    }
+
+    // Calculate actualDuration if not present
+    // Assuming startTime = deadline - duration
+    // If deadline or duration is missing, we cannot calculate it accurately without explicit startTime
+    if (task.deadline && task.duration) {
+      const durationInMs = task.duration * 60 * 1000;
+      const startTime = new Date(task.deadline).getTime() - durationInMs;
+      const endTime = Date.now();
+      const actualDurationMinutes = (endTime - startTime) / (60 * 1000);
+      task.actualDuration = parseFloat(actualDurationMinutes.toFixed(2));
+      task.estimatedDuration = task.duration; // Ensure this is set for future reference
+      console.log(`[DEBUG] Calculated actualDuration for task '${task.title}': ${task.actualDuration} (Est: ${task.estimatedDuration})`);
     }
 
     // Update the task status to "completed" in MongoDB

@@ -1,30 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { getTasks, completeTask, updateTask } from '../api';
+import React, { useState } from 'react';
+import { completeTask, updateTask } from '../api';
+import { useTasks } from '../context/TaskContext'; // Import context
 import './DependencyGraphView.css';
 
 const DependencyGraphView = () => {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { tasks, fetchTasks, loading } = useTasks(); // Consume context
   const [dependent, setDependent] = useState('');
   const [prerequisite, setPrerequisite] = useState('');
   const [addError, setAddError] = useState('');
   const [addSuccess, setAddSuccess] = useState('');
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const fetchTasks = async () => {
-    setLoading(true);
-    try {
-      const response = await getTasks();
-      setTasks(response.tasks || []);
-    } catch (error) {
-      setTasks([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Add dependency by updating the dependent task's prerequisites
   const handleAddDependency = async (e) => {
@@ -54,7 +38,7 @@ const DependencyGraphView = () => {
       setAddSuccess('Dependency added!');
       setDependent('');
       setPrerequisite('');
-      fetchTasks();
+      fetchTasks(); // Refresh context
     } catch (err) {
       setAddError('Failed to add dependency.');
     }
@@ -70,7 +54,7 @@ const DependencyGraphView = () => {
     try {
       await completeTask(taskId);
       // Success: refresh the task list to show updated statuses
-      fetchTasks();
+      fetchTasks(); // Refresh context
     } catch (error) {
       // Show error message from backend (Graph DS validation)
       const errorMessage = error.response?.data?.error || 'Failed to complete task.';

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createTask } from '../api';
+import { useTasks } from '../context/TaskContext'; // Import context
 import { Calendar, Clock, AlertCircle, FileText, Edit } from 'lucide-react';
 import './TaskForm.css';
 
 const TaskForm = () => {
+  const { suggestedBufferTime, fetchTasks } = useTasks(); // Consume context
   const location = useLocation();
   const selectedDate = location.state?.selectedDate;
 
@@ -48,6 +50,9 @@ const TaskForm = () => {
 
     try {
       const response = await createTask(formData);
+
+      // Refresh tasks in context
+      fetchTasks();
 
       // Success - clear the form
       setSuccessMessage(`✓ Task "${formData.title}" created successfully!`);
@@ -160,6 +165,13 @@ const TaskForm = () => {
             min="1"
             required
           />
+          {/* Suggest Buffer Time Hint */}
+          {suggestedBufferTime > 0 && (
+            <div className="buffer-hint" style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Clock size={14} className="buffer-icon" color="#38bdf8" />
+              <span>Based on your history, we suggest adding <strong>{suggestedBufferTime}%</strong> buffer time.</span>
+            </div>
+          )}
         </div>
 
         {/* Warning Message */}

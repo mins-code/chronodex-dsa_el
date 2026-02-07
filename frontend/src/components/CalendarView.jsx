@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Calendar, List, Clock, Plus } from 'lucide-react';
-import { getTasks } from '../api';
+import { useTasks } from '../context/TaskContext'; // Import context
 import './CalendarView.css';
 
 const CalendarView = () => {
     const navigateToRoute = useNavigate();
+    const { tasks, fetchTasks, loading } = useTasks(); // Consume context
     const [viewMode, setViewMode] = useState('monthly'); // 'monthly' | 'weekly' | 'daily'
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showOverlay, setShowOverlay] = useState(false);
     const [overlayTasks, setOverlayTasks] = useState([]);
     const [overlayDate, setOverlayDate] = useState(null);
-    const [tasks, setTasks] = useState([]);
-    const [loading, setLoading] = useState(true);
+    // Removed local tasks state
 
     const monthNames = [
         'January', 'February', 'March', 'April', 'May', 'June',
@@ -23,25 +23,12 @@ const CalendarView = () => {
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dayNamesFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-    // Fetch tasks from API
+    // Refetch on focus using context
     useEffect(() => {
-        const fetchTasks = async () => {
-            try {
-                setLoading(true);
-                const response = await getTasks();
-                // Backend returns { tasks: [...], suggestedBufferTime: ... }
-                setTasks(response.tasks || response.data || []);
-            } catch (error) {
-                console.error('Error fetching tasks:', error);
-                setTasks([]);
-            } finally {
-                setLoading(false);
-            }
-        };
+        // Initial fetch is already done in Context, but we can fetch here if needed
+        // ensure we don't loop. 
+        // fetchTasks(); <-- excessive calling might loop if fetchTasks changes identity
 
-        fetchTasks();
-
-        // Refetch tasks when window regains focus (e.g., returning from task creation)
         const handleFocus = () => {
             fetchTasks();
         };
@@ -51,7 +38,7 @@ const CalendarView = () => {
         return () => {
             window.removeEventListener('focus', handleFocus);
         };
-    }, []);
+    }, []); // Empty dependency array to run only once on mount
 
     // Get priority color - Subtle, dull tones
     const getPriorityColor = (priority) => {

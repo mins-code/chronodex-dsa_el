@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { TaskProvider } from './context/TaskContext';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
@@ -62,87 +63,89 @@ function App() {
           path="/*"
           element={
             <ProtectedRoute>
-              <div className="app-layout">
-                {/* Sidebar */}
-                <Sidebar />
+              <TaskProvider user={user} key={user?._id}>
+                <div className="app-layout">
+                  {/* Sidebar */}
+                  <Sidebar />
 
-                {/* Main Content */}
-                <div className="main-content">
+                  {/* Main Content */}
+                  <div className="main-content">
 
 
-                  <Routes>
-                    {/* Dashboard Route */}
-                    <Route
-                      path="/"
-                      element={<Dashboard user={user} onLogout={handleLogout} />}
-                    />
+                    <Routes>
+                      {/* Dashboard Route */}
+                      <Route
+                        path="/"
+                        element={<Dashboard user={user} onLogout={handleLogout} />}
+                      />
 
-                    {/* Calendar Route */}
-                    <Route
-                      path="/calendar"
-                      element={
-                        <div className="calendar-page">
-                          <CalendarView />
-                        </div>
-                      }
-                    />
+                      {/* Calendar Route */}
+                      <Route
+                        path="/calendar"
+                        element={
+                          <div className="calendar-page">
+                            <CalendarView />
+                          </div>
+                        }
+                      />
 
-                    {/* Create Task Route */}
-                    <Route
-                      path="/create"
-                      element={
-                        <div className="create-task">
-                          <h2>Create Task</h2>
-                          <TaskForm />
-                        </div>
-                      }
-                    />
+                      {/* Create Task Route */}
+                      <Route
+                        path="/create"
+                        element={
+                          <div className="create-task">
+                            <h2>Create Task</h2>
+                            <TaskForm />
+                          </div>
+                        }
+                      />
 
-                    {/* Dependency View Route */}
-                    <Route
-                      path="/dependencies"
-                      element={
-                        <div className="dependencies">
-                          <h2>Dependency View</h2>
-                          <DependencyGraphView />
-                        </div>
-                      }
-                    />
+                      {/* Dependency View Route */}
+                      <Route
+                        path="/dependencies"
+                        element={
+                          <div className="dependencies">
+                            <h2>Dependency View</h2>
+                            <DependencyGraphView />
+                          </div>
+                        }
+                      />
 
-                    {/* Notifications Route */}
-                    <Route
-                      path="/notifications"
-                      element={
-                        <div className="notifications">
-                          <h2>Notifications</h2>
-                          <Notifications />
-                        </div>
-                      }
-                    />
+                      {/* Notifications Route */}
+                      <Route
+                        path="/notifications"
+                        element={
+                          <div className="notifications">
+                            <h2>Notifications</h2>
+                            <Notifications />
+                          </div>
+                        }
+                      />
 
-                    {/* Planner Route */}
-                    <Route
-                      path="/planner"
-                      element={
-                        <div className="planner-page">
-                          <h2>Task Planner</h2>
-                          <Planner />
-                        </div>
-                      }
-                    />
+                      {/* Planner Route */}
+                      <Route
+                        path="/planner"
+                        element={
+                          <div className="planner-page">
+                            <h2>Task Planner</h2>
+                            <Planner />
+                          </div>
+                        }
+                      />
 
-                    {/* Settings Route */}
-                    <Route
-                      path="/settings"
-                      element={<SettingsPage user={user} onLogout={handleLogout} />}
-                    />
+                      {/* Settings Route */}
+                      <Route
+                        path="/settings"
+                        element={<SettingsPage user={user} onLogout={handleLogout} />}
+                      />
 
-                    {/* Task Detail Route */}
-                    <Route path="/task/:id" element={<TaskDetailCard />} />
-                    <Route path="/tasks/:id" element={<TaskDetail />} />
-                  </Routes>
+                      {/* Task Detail Route */}
+                      <Route path="/task/:id" element={<TaskDetailCard />} />
+                      <Route path="/tasks/:id" element={<TaskDetail />} />
+                    </Routes>
+                  </div>
                 </div>
-              </div>
+              </TaskProvider>
             </ProtectedRoute>
           }
         />

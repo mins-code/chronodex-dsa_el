@@ -3,52 +3,47 @@ import Header from './Header';
 import TaskDistributionGraph from './TaskDistributionGraph';
 import TaskSearch from './TaskSearch';
 import PriorityQueueView from './PriorityQueueView';
-import { getPriorityTasks, getTasks } from '../api';
+import { useTasks } from '../context/TaskContext'; // Import context
 import './Dashboard.css';
 
 const Dashboard = ({ user, onLogout }) => {
+  const { tasks, fetchTasks } = useTasks(); // Consume context
   const [mostUrgentTask, setMostUrgentTask] = useState(null);
-
   const [dailyPendingCount, setDailyPendingCount] = useState(0);
 
+  // Refresh tasks on mount to ensure fresh data
   useEffect(() => {
-    const fetchMostUrgentTask = async () => {
-      try {
-        const priorityTasks = await getPriorityTasks();
-        if (priorityTasks && priorityTasks.length > 0) {
-          setMostUrgentTask(priorityTasks[0]);
-        }
-      } catch (error) {
-        console.error('Error fetching priority tasks:', error);
-      }
-    };
+    fetchTasks();
+  }, [fetchTasks]);
 
-    const fetchDailyTasks = async () => {
-      try {
-        const response = await getTasks();
-        const allTasks = response.tasks || [];
+  useEffect(() => {
+    if (!tasks) return;
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+    // 1. Find Most Urgent Task
+    // Filter out completed tasks
+    const pendingTasks = tasks.filter(t => t.status !== 'completed');
 
-        const pendingToday = allTasks.filter(task => {
-          if (task.status === 'completed') return false;
+    // Backend sorts by priorityScore, so pendingTasks[0] is the most urgent
+    if (pendingTasks.length > 0) {
+      setMostUrgentTask(pendingTasks[0]);
+    } else {
+      setMostUrgentTask(null);
+    }
 
-          const taskDate = new Date(task.deadline);
-          taskDate.setHours(0, 0, 0, 0);
+    // 2. Calculate Daily Pending Count
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-          return taskDate.getTime() === today.getTime();
-        });
+    const pendingToday = pendingTasks.filter(task => {
+      if (!task.deadline) return false;
+      const taskDate = new Date(task.deadline);
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate.getTime() === today.getTime();
+    });
 
-        setDailyPendingCount(pendingToday.length);
-      } catch (error) {
-        console.error('Error fetching daily tasks:', error);
-      }
-    };
+    setDailyPendingCount(pendingToday.length);
 
-    fetchMostUrgentTask();
-    fetchDailyTasks();
-  }, []);
+  }, [tasks]);
 
   return (
     <div className="dashboard">

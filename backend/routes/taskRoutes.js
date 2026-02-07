@@ -177,55 +177,7 @@ router.get('/:taskId', async (req, res) => {
 // PUT /:taskId - Update a task (protected)
 router.put('/:taskId', authMiddleware, updateTask);
 
-// PATCH /:taskId - Update task status
-router.patch('/:taskId', async (req, res) => {
-  try {
-    const { status } = req.body;
-
-    // Validate status
-    const validStatuses = ['to-do', 'in-progress', 'completed'];
-    if (status && !validStatuses.includes(status)) {
-      return res.status(400).json({ error: 'Invalid status. Must be to-do, in-progress, or completed.' });
-    }
-
-    const updatedTask = await Task.findByIdAndUpdate(
-      req.params.taskId,
-      { status },
-      { new: true }
-    );
-
-    if (!updatedTask) {
-      return res.status(404).json({ error: 'Task not found.' });
-    }
-
-    // Re-insert into PriorityQueue if the task is now active (not completed)
-    if (status !== 'completed') {
-      const priorityScore = require('../utils/PriorityQueue').calculateScore(
-        updatedTask.deadline,
-        updatedTask.priority
-      );
-
-      // Remove any existing entry for this task first to avoid duplicates
-      taskQueue.heap = taskQueue.heap.filter(
-        (node) => node.taskId && node.taskId.toString() !== req.params.taskId.toString()
-      );
-
-      taskQueue.insert({
-        taskId: updatedTask._id,
-        priorityScore
-      });
-    } else {
-      // If task is completed, ensure it is removed from the queue
-      taskQueue.heap = taskQueue.heap.filter(
-        (node) => node.taskId && node.taskId.toString() !== req.params.taskId.toString()
-      );
-    }
-
-    res.status(200).json(updatedTask);
-  } catch (error) {
-    console.error('Error updating task status:', error);
-    res.status(500).json({ error: 'Failed to update task status.' });
-  }
-});
+// PATCH /:taskId - Update task (including status) - uses updateTask controller
+router.patch('/:taskId', authMiddleware, updateTask);
 
 module.exports = router;
