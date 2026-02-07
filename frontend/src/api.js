@@ -199,3 +199,16 @@ export const getTaskById = async (id) => {
     throw error;
   }
 };
+
+// Get user efficiency analytics
+export const getEfficiencyAnalytics = async () => {
+  try {
+    const response = await api.get('/tasks/analytics/efficiency');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching efficiency analytics:', error);
+    throw error;
+  }
+};
+
+export default api;

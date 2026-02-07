@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task');
-const { createTask, completeTask, deleteTask, undoDelete, clearAllTasks, getTasks, updateTask } = require('../controllers/taskController');
+const { createTask, completeTask, deleteTask, undoDelete, clearAllTasks, getTasks, updateTask, getEfficiencyAnalytics } = require('../controllers/taskController');
 const { taskTrie, taskQueue } = require('../state');
 const authMiddleware = require('../middleware/authMiddleware');
 
 console.log('[DEBUG] taskRoutes.js is being evaluated/loaded');
+
+// GET /analytics/efficiency - Return user efficiency stats (protected)
+router.get('/analytics/efficiency', authMiddleware, getEfficiencyAnalytics);
 
 // GET /distribution - Return task counts grouped by date (protected)
 router.get('/distribution', authMiddleware, async (req, res) => {

@@ -1,11 +1,6 @@
 const Task = require('../models/Task');
 
-/**
- * Calculates the average percentage difference between estimatedDuration and actualDuration for completed tasks.
- * @param {string} userId - ID of the user (currently unused as specific user association is pending)
- * @returns {Promise<number>} - The average deviation as a percentage (e.g., 20 for 20% slower, -10 for 10% faster).
- */
-const calculateTimeDeviation = async (userId) => {
+const calculateTimeDeviation = async (userId, returnDetails = false) => {
   try {
     // Fetch completed tasks that have both estimatedDuration and actualDuration
     // Fetch completed tasks that have either estimatedDuration OR duration, and actualDuration
@@ -47,11 +42,20 @@ const calculateTimeDeviation = async (userId) => {
 
     console.log(`[DEBUG] Total Deviation: ${totalDeviation}, Count: ${count}, Avg: ${averageDeviation}, Result: ${result}%`);
 
+    if (returnDetails) {
+      return {
+        averageDeviation: averageDeviation,
+        percentage: result,
+        totalTasksAnalyzed: count,
+        efficiencyMultiplier: 1 + averageDeviation // e.g. 0.2 deviation -> 1.2 multiplier (slower)
+      };
+    }
+
     // Return as percentage (e.g., 0.20 -> 20)
     return result;
   } catch (error) {
     console.error('Error calculating time deviation:', error);
-    return 0;
+    return returnDetails ? { error: true } : 0;
   }
 };
 

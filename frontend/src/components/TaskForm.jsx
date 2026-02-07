@@ -33,6 +33,7 @@ const TaskForm = () => {
   const [warning, setWarning] = useState(null);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [showBufferWarning, setShowBufferWarning] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -155,23 +156,37 @@ const TaskForm = () => {
           <label htmlFor="duration">
             <Clock size={18} /> Duration (minutes) <span className="required">*</span>
           </label>
-          <input
-            type="number"
-            id="duration"
-            name="duration"
-            value={formData.duration}
-            onChange={handleChange}
-            placeholder="Enter duration in minutes"
-            min="1"
-            required
-          />
-          {/* Suggest Buffer Time Hint */}
-          {suggestedBufferTime > 0 && (
-            <div className="buffer-hint" style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={14} className="buffer-icon" color="#38bdf8" />
-              <span>Based on your history, we suggest adding <strong>{suggestedBufferTime}%</strong> buffer time.</span>
-            </div>
-          )}
+          <div style={{ position: 'relative' }}>
+            <input
+              type="number"
+              id="duration"
+              name="duration"
+              value={formData.duration}
+              onChange={handleChange}
+              onFocus={() => setShowBufferWarning(true)}
+              onBlur={() => setShowBufferWarning(false)}
+              placeholder="Enter duration in minutes"
+              min="1"
+              required
+            />
+
+            {/* Dynamic Scanning Buffer Warning */}
+            {suggestedBufferTime > 0 && showBufferWarning && (
+              <div className="buffer-scanner-warning">
+                <div className="scanner-line"></div>
+                <div className="scanner-header">
+                  <AlertCircle size={16} className="scanner-icon" />
+                  <span>SYSTEM ADVISORY</span>
+                </div>
+                <div className="scanner-content">
+                  Based on historical analysis, a buffer of <span className="scanner-highlight">{suggestedBufferTime}%</span> is recommended.
+                </div>
+                <div className="scanner-footer">
+                  EFFICIENCY RATING: CALIBRATING...
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Warning Message */}

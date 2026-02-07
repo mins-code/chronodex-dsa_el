@@ -779,6 +779,172 @@
     }
 }
 
+/* ========== TASK HOVER TOOLTIP (SCANNING TILE) ========== */
+.task-tooltip {
+    position: fixed;
+    /* Changed from absolute to fixed */
+    transform: translateX(-50%) translateY(-100%);
+    /* Position above cursor */
+    width: 260px;
+    /* Slightly wider for data */
+    background: rgba(10, 15, 30, 0.98);
+    /* Darker, less transparent background */
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--accent-blue);
+    border-radius: 6px;
+    /* Sharper corners */
+    padding: 16px;
+    z-index: 9999;
+    /* Ensure it's on top of everything */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.3);
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    font-family: 'Courier New', Courier, monospace;
+    /* Tech/Code font */
+    margin-top: -20px;
+    /* Gap from cursor */
+}
+
+/* Active State managed by React */
+.task-tooltip.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Scanning Line Animation */
+.task-tooltip::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    /* Slightly thicker */
+    background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+    box-shadow: 0 0 15px #38bdf8;
+    animation: scan 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    z-index: 10000;
+    opacity: 0.9;
+}
+
+@keyframes scan {
+    0% {
+        top: 0%;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        top: 100%;
+        opacity: 0;
+    }
+}
+
+/* Tooltip Content */
+.tooltip-header {
+    border-bottom: 2px solid rgba(56, 189, 248, 0.3);
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+}
+
+.tooltip-title {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    /* Cyberpunk style */
+    letter-spacing: 0.05em;
+}
+
+.tooltip-meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.tooltip-value {
+    color: #7dd3fc;
+    font-weight: 700;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.tooltip-buffer-row {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(56, 189, 248, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tooltip-buffer-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+}
+
+.tooltip-buffer-value {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #34d399;
+    /* Green for efficiency/buffer */
+    font-weight: 700;
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+}
+
+/* Priority Tags in Tooltip */
+.tooltip-priority {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+}
+
+.tooltip-priority.critical {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.tooltip-priority.high {
+    background: rgba(249, 115, 22, 0.2);
+    color: #fb923c;
+    border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.tooltip-priority.medium {
+    background: rgba(234, 179, 8, 0.2);
+    color: #facc15;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.tooltip-priority.low {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
 @media (max-width: 768px) {
     .calendar-title {
         font-size: 1.25rem;

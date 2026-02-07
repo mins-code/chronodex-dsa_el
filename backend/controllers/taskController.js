@@ -429,4 +429,24 @@ const clearAllTasks = async (req, res) => {
   }
 };
 
-module.exports = { createTask, completeTask, deleteTask, undoDelete, clearAllTasks, getTasks, updateTask };
+// GET /analytics/efficiency - Return user efficiency stats
+const getEfficiencyAnalytics = async (req, res) => {
+  try {
+    const { calculateTimeDeviation } = require('../utils/UserPatternAnalyzer');
+    const userId = req.userId;
+
+    // Request detailed stats
+    const stats = await calculateTimeDeviation(userId, true);
+
+    if (stats.error) {
+      throw new Error('Failed to calculate deviation');
+    }
+
+    res.status(200).json(stats);
+  } catch (error) {
+    console.error('Error fetching efficiency analytics:', error);
+    res.status(500).json({ error: 'Failed to fetch efficiency analytics.' });
+  }
+};
+
+module.exports = { createTask, completeTask, deleteTask, undoDelete, clearAllTasks, getTasks, updateTask, getEfficiencyAnalytics };

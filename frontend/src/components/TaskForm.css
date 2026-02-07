@@ -142,5 +142,147 @@
     background: rgba(100, 116, 139, 0.3);
     cursor: not-allowed;
     box-shadow: none;
-    opacity: 0.6;
+}
+
+/* ========== BUFFER SCANNER WARNING (TECH STYLE) ========== */
+.buffer-scanner-warning {
+    position: absolute;
+    top: 50%;
+    left: 105%;
+    /* Position to the right of the input */
+    transform: translateY(-50%);
+    width: 280px;
+    background: rgba(10, 15, 30, 0.95);
+    border: 1px solid var(--accent-blue);
+    border-radius: 8px;
+    padding: 16px;
+    z-index: 100;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+    backdrop-filter: blur(12px);
+    font-family: 'Courier New', Courier, monospace;
+    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    pointer-events: none;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+}
+
+/* Scanning Line Animation */
+.scanner-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #38bdf8;
+    box-shadow: 0 0 10px #38bdf8;
+    animation: listScan 2s linear infinite;
+    opacity: 0.7;
+}
+
+@keyframes listScan {
+    0% {
+        top: 0%;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        top: 100%;
+        opacity: 0;
+    }
+}
+
+.scanner-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #facc15;
+    /* Yellow warning color */
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid rgba(250, 204, 21, 0.2);
+    padding-bottom: 6px;
+}
+
+.scanner-icon {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
+}
+
+.scanner-content {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+.scanner-highlight {
+    color: #34d399;
+    /* Green highlight */
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.scanner-footer {
+    font-size: 0.65rem;
+    color: rgba(56, 189, 248, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-align: right;
+}
+
+/* Responsiveness for Warning */
+@media (max-width: 1100px) {
+    .buffer-scanner-warning {
+        left: 0;
+        top: 100%;
+        transform: translateY(10px);
+        width: 100%;
+        margin-top: 5px;
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateY(0);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(10px);
+        }
+    }
 }

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Calendar, List, Clock, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, List, Clock, Plus, Check } from 'lucide-react';
 import { useTasks } from '../context/TaskContext'; // Import context
+import { getEfficiencyAnalytics } from '../api';
 import './CalendarView.css';
 
 const CalendarView = () => {
@@ -13,6 +14,7 @@ const CalendarView = () => {
     const [showOverlay, setShowOverlay] = useState(false);
     const [overlayTasks, setOverlayTasks] = useState([]);
     const [overlayDate, setOverlayDate] = useState(null);
+    const [efficiencyStats, setEfficiencyStats] = useState(null);
     // Removed local tasks state
 
     const monthNames = [
@@ -31,8 +33,19 @@ const CalendarView = () => {
 
         const handleFocus = () => {
             fetchTasks();
+            fetchEfficiency();
         };
 
+        const fetchEfficiency = async () => {
+            try {
+                const stats = await getEfficiencyAnalytics();
+                setEfficiencyStats(stats);
+            } catch (error) {
+                console.error('Failed to fetch efficiency stats', error);
+            }
+        };
+
+        fetchEfficiency();
         window.addEventListener('focus', handleFocus);
 
         return () => {
@@ -202,6 +215,65 @@ const CalendarView = () => {
         );
     };
 
+    // --- Tooltip State ---
+    const [hoveredTask, setHoveredTask] = useState(null);
+    const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+
+    const handleTaskMouseEnter = (e, task, bufferDuration) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setTooltipPosition({
+            x: rect.left + (rect.width / 2),
+            y: rect.top
+        });
+        setHoveredTask({ ...task, bufferDuration });
+    };
+
+    const handleTaskMouseLeave = () => {
+        setHoveredTask(null);
+    };
+
+    // --- Task Tooltip Component (Active State) ---
+    const ActiveTaskTooltip = () => {
+        if (!hoveredTask) return null;
+
+        const priorityColors = {
+            critical: 'critical',
+            high: 'high',
+            medium: 'medium',
+            low: 'low'
+        };
+
+        return (
+            <div
+                className="task-tooltip active"
+                style={{
+                    top: `${tooltipPosition.y}px`,
+                    left: `${tooltipPosition.x}px`
+                }}
+            >
+                <div className="tooltip-header">
+                    <div className="tooltip-title">{hoveredTask.title}</div>
+                    <div className={`tooltip-priority ${priorityColors[hoveredTask.priority]}`}>
+                        {hoveredTask.priority} PRIORITY
+                    </div>
+                </div>
+
+                <div className="tooltip-meta-row">
+                    <span>TIMEFRAME:</span>
+                    <span className="tooltip-value">{hoveredTask.duration || 30} MIN</span>
+                </div>
+
+                {/* Show Buffer only if user has an efficiency multiplier > 1 */}
+                {hoveredTask.bufferDuration > 0 && (
+                    <div className="tooltip-buffer-row">
+                        <span className="tooltip-buffer-label">SYSTEM BUFFER</span>
+                        <span className="tooltip-buffer-value">+{Math.round(hoveredTask.bufferDuration)} MIN</span>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     // Render Weekly View - Continuous Timeline
     const renderWeeklyView = () => {
         const weekStart = getWeekStart(selectedDate);
@@ -217,33 +289,78 @@ const CalendarView = () => {
         const getWeeklyTaskStyle = (task) => {
             const deadlineDate = new Date(task.deadline);
             const durationMinutes = task.duration || 30;
+            const isCompleted = task.status === 'completed';
+
+            // Calculate buffer (Apply to ALL tasks)
+            const multiplier = efficiencyStats?.efficiencyMultiplier || 1;
+            const bufferDuration = durationMinutes * (multiplier - 1);
+
+            // Total height including buffer
+            const totalDuration = durationMinutes + bufferDuration;
+
             const startTime = new Date(deadlineDate.getTime() - durationMinutes * 60000);
 
             const startHour = startTime.getHours();
             const startMinutes = startTime.getMinutes();
 
             const top = (startHour * 60) + startMinutes;
-            const height = durationMinutes;
+            const height = totalDuration;
 
             return {
-                top: `${top}px`,
-                height: `${height}px`,
-                minHeight: '24px', // Ensure visibility
-                backgroundColor: getPriorityColor(task.priority),
-                opacity: 0.9,
-                position: 'absolute',
-                width: '90%',
-                left: '5%',
-                borderRadius: '4px',
-                borderLeft: `3px solid ${getPriorityColor(task.priority)}`,
-                zIndex: 10,
-                cursor: 'pointer',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                padding: '2px 4px',
-                lineHeight: 1.1
+                isCompleted,
+                bufferDuration, // Pass this down
+                container: {
+                    top: `${top}px`,
+                    height: `${height}px`,
+                    minHeight: '24px',
+                    position: 'absolute',
+                    width: '90%',
+                    left: '5%',
+                    zIndex: 10,
+                    cursor: 'pointer',
+                },
+                visualLayer: {
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                    zIndex: 0,
+                    opacity: isCompleted ? 0.6 : 1, // Dim completed tasks
+                    filter: isCompleted ? 'grayscale(0.5)' : 'none' // Desaturate completed
+                },
+                coreBg: {
+                    flex: `0 0 ${durationMinutes}px`, // Fixed height for core task
+                    backgroundColor: getPriorityColor(task.priority),
+                    opacity: 1,
+                    borderLeft: `3px solid ${getPriorityColor(task.priority)}`,
+                },
+                bufferBg: {
+                    flex: `1 1 auto`, // Remaining space is buffer
+                    backgroundImage: `repeating-linear-gradient(
+                        45deg,
+                        ${getPriorityColor(task.priority)}40,
+                        ${getPriorityColor(task.priority)}40 5px,
+                        ${getPriorityColor(task.priority)}20 5px,
+                        ${getPriorityColor(task.priority)}20 10px
+                    )`,
+                    borderLeft: `3px solid ${getPriorityColor(task.priority)}40`,
+                },
+                content: {
+                    position: 'relative',
+                    zIndex: 1, // On top of visual layer
+                    padding: '4px 6px',
+                    color: '#ffffff',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    lineHeight: 1.2,
+                    pointerEvents: 'none' // Let clicks pass through to container
+                }
             };
         };
 
@@ -287,22 +404,42 @@ const CalendarView = () => {
                                 ))}
 
                                 {/* Tasks Layer */}
-                                {dayTasks.map((task, idx) => (
-                                    <div
-                                        key={task._id || idx}
-                                        className="weekly-task-item"
-                                        style={getWeeklyTaskStyle(task)}
-                                        title={`${task.title} (${task.duration || 30} min)`}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigateToRoute(`/tasks/${task._id}`);
-                                        }}
-                                    >
-                                        <div className="task-title-row">
-                                            <span className="weekly-task-title">{task.title}</span>
+                                {dayTasks.map((task, idx) => {
+                                    const styles = getWeeklyTaskStyle(task);
+                                    return (
+                                        <div
+                                            key={task._id || idx}
+                                            className="weekly-task-item-container"
+                                            style={styles.container}
+                                            title=""
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigateToRoute(`/tasks/${task._id}`);
+                                            }}
+                                            onMouseEnter={(e) => handleTaskMouseEnter(e, task, styles.bufferDuration)}
+                                            onMouseLeave={handleTaskMouseLeave}
+                                        >
+                                            {/* Visual Layer (Backgrounds) */}
+                                            <div style={styles.visualLayer}>
+                                                <div style={styles.coreBg}></div>
+                                                {/* Render buffer only if it exists */}
+                                                {(efficiencyStats?.efficiencyMultiplier > 1) && (
+                                                    <div style={styles.bufferBg}></div>
+                                                )}
+                                            </div>
+
+                                            {/* Content Layer (Text) */}
+                                            <div style={styles.content}>
+                                                <div className="task-title-row">
+                                                    {styles.isCompleted && <Check size={12} style={{ marginRight: '4px', display: 'inline' }} strokeWidth={3} />}
+                                                    <span className="weekly-task-title" style={styles.isCompleted ? { textDecoration: 'line-through', opacity: 0.9 } : {}}>
+                                                        {task.title}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         );
                     })}
@@ -320,34 +457,80 @@ const CalendarView = () => {
         const getDailyTaskStyle = (task) => {
             const deadlineDate = new Date(task.deadline);
             const durationMinutes = task.duration || 30;
+            const isCompleted = task.status === 'completed';
+
+            // Calculate buffer (Apply to ALL tasks)
+            const multiplier = efficiencyStats?.efficiencyMultiplier || 1;
+            const bufferDuration = durationMinutes * (multiplier - 1);
+
+            // Total height including buffer
+            const totalDuration = durationMinutes + bufferDuration;
+
             const startTime = new Date(deadlineDate.getTime() - durationMinutes * 60000);
 
             const startHour = startTime.getHours();
             const startMinutes = startTime.getMinutes();
 
             const top = (startHour * 60) + startMinutes;
-            const height = durationMinutes;
+            const height = totalDuration;
 
             return {
-                top: `${top}px`,
-                height: `${height}px`,
-                minHeight: '24px', // Ensure visibility for short tasks
-                backgroundColor: getPriorityColor(task.priority),
-                opacity: 0.9,
-                position: 'absolute',
-                width: 'calc(100% - 70px)',
-                left: '60px',
-                right: '10px',
-                borderRadius: '6px',
-                borderLeft: `4px solid ${getPriorityColor(task.priority)}`,
-                zIndex: 10,
-                cursor: 'pointer',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                padding: '4px 8px',
-                lineHeight: 1.2
+                isCompleted,
+                bufferDuration, // Pass this down
+                container: {
+                    top: `${top}px`,
+                    height: `${height}px`,
+                    minHeight: '24px',
+                    position: 'absolute',
+                    width: 'calc(100% - 70px)',
+                    left: '60px',
+                    right: '10px',
+                    zIndex: 10,
+                    cursor: 'pointer',
+                },
+                visualLayer: {
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    borderRadius: '6px',
+                    overflow: 'hidden',
+                    zIndex: 0,
+                    opacity: isCompleted ? 0.6 : 1, // Dim completed tasks
+                    filter: isCompleted ? 'grayscale(0.5)' : 'none'
+                },
+                coreBg: {
+                    flex: `0 0 ${durationMinutes}px`, // Fixed height for core
+                    backgroundColor: getPriorityColor(task.priority),
+                    opacity: 1, // Increased opacity
+                    borderLeft: `4px solid ${getPriorityColor(task.priority)}`,
+                },
+                bufferBg: {
+                    flex: `1 1 auto`,
+                    backgroundImage: `repeating-linear-gradient(
+                        45deg,
+                        ${getPriorityColor(task.priority)}40,
+                        ${getPriorityColor(task.priority)}40 5px,
+                        ${getPriorityColor(task.priority)}20 5px,
+                        ${getPriorityColor(task.priority)}20 10px
+                    )`,
+                    borderLeft: `4px solid ${getPriorityColor(task.priority)}40`,
+                },
+                content: {
+                    position: 'relative',
+                    zIndex: 1,
+                    padding: '4px 8px',
+                    color: '#ffffff', // Force white text
+                    textShadow: '0 1px 2px rgba(0,0,0,0.5)', // Add text shadow
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    height: '100%' // Ensure content can center if needed, or stick to top
+                }
             };
         };
 
@@ -372,21 +555,42 @@ const CalendarView = () => {
 
                         {/* Tasks Layer */}
                         <div className="daily-tasks-layer">
-                            {dayTasks.map((task, idx) => (
-                                <div
-                                    key={task._id || idx}
-                                    className="daily-task-item"
-                                    style={getDailyTaskStyle(task)}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigateToRoute(`/tasks/${task._id}`);
-                                    }}
-                                    title={`${task.title} (${task.duration || 30} min)`}
-                                >
-                                    <span className="daily-task-title" style={{ fontSize: '0.85rem', fontWeight: 600 }}>{task.title}</span>
-                                    {task.description && <span className="daily-task-desc" style={{ fontSize: '0.7rem', opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.description}</span>}
-                                </div>
-                            ))}
+                            {dayTasks.map((task, idx) => {
+                                const styles = getDailyTaskStyle(task);
+                                return (
+                                    <div
+                                        key={task._id || idx}
+                                        className="daily-task-item-container"
+                                        style={styles.container}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigateToRoute(`/tasks/${task._id}`);
+                                        }}
+                                        onMouseEnter={(e) => handleTaskMouseEnter(e, task, styles.bufferDuration)}
+                                        onMouseLeave={handleTaskMouseLeave}
+                                        title="" // Clear default title to avoid double tooltip
+                                    >
+                                        {/* Visual Layer */}
+                                        <div style={styles.visualLayer}>
+                                            <div style={styles.coreBg}></div>
+                                            {(efficiencyStats?.efficiencyMultiplier > 1) && (
+                                                <div style={styles.bufferBg}></div>
+                                            )}
+                                        </div>
+
+                                        {/* Content Layer */}
+                                        <div style={styles.content}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                {styles.isCompleted && <Check size={14} strokeWidth={3} />}
+                                                <span className="daily-task-title" style={{ fontSize: '0.95rem', fontWeight: 700, ...(styles.isCompleted ? { textDecoration: 'line-through', opacity: 0.9 } : {}) }}>
+                                                    {task.title}
+                                                </span>
+                                            </div>
+                                            {task.description && <span className="daily-task-desc" style={{ fontSize: '0.8rem', opacity: 0.9, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.description}</span>}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -462,6 +666,9 @@ const CalendarView = () => {
                     {viewMode === 'daily' && renderDailyView()}
                 </>
             )}
+
+            {/* Active Task Tooltip (Fixed Position) */}
+            <ActiveTaskTooltip />
 
             {/* Task Overlay Modal */}
             {showOverlay && (
