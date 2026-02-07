@@ -5,16 +5,20 @@ class DirectedGraph {
 
   // Add a new task to the graph
   addTask(taskId) {
-    if (!this.adjacencyList.has(taskId)) {
-      this.adjacencyList.set(taskId, []);
+    const id = String(taskId);
+    if (!this.adjacencyList.has(id)) {
+      this.adjacencyList.set(id, []);
     }
   }
 
   // Add a dependency (edge) from prerequisiteId to taskId
   addDependency(prerequisiteId, taskId) {
-    this.addTask(prerequisiteId);
-    this.addTask(taskId);
-    this.adjacencyList.get(prerequisiteId).push(taskId);
+    const preId = String(prerequisiteId);
+    const currId = String(taskId);
+
+    this.addTask(preId);
+    this.addTask(currId);
+    this.adjacencyList.get(preId).push(currId);
   }
 
   // Detect cycles in the graph using DFS
@@ -29,7 +33,8 @@ class DirectedGraph {
       visited.add(node);
       stack.add(node);
 
-      for (const neighbor of this.adjacencyList.get(node) || []) {
+      const neighbors = this.adjacencyList.get(node) || [];
+      for (const neighbor of neighbors) {
         if (dfs(neighbor)) return true;
       }
 
@@ -46,9 +51,10 @@ class DirectedGraph {
 
   // Get all prerequisites for a given taskId
   getPrerequisites(taskId) {
+    const targetId = String(taskId);
     const prerequisites = [];
     for (const [key, value] of this.adjacencyList.entries()) {
-      if (value.includes(taskId)) {
+      if (value.includes(targetId)) {
         prerequisites.push(key);
       }
     }
@@ -57,9 +63,12 @@ class DirectedGraph {
 
   // Check if a task can be completed based on completedTaskIds
   canComplete(taskId, completedTaskIds) {
-    const prerequisites = this.getPrerequisites(taskId);
+    const targetId = String(taskId);
+    // Ensure completedTaskIds are also strings for consistent comparison
+    const completedIdsAsStrings = new Set(completedTaskIds.map(String));
+    const prerequisites = this.getPrerequisites(targetId);
     return prerequisites.every((prerequisite) =>
-      completedTaskIds.includes(prerequisite)
+      completedIdsAsStrings.has(prerequisite)
     );
   }
 
@@ -96,37 +105,72 @@ class DirectedGraph {
     return stack.reverse();
   }
 
+  // Helper to get all descendants of a given task
+  getAllDescendants(taskId) {
+    const id = String(taskId);
+    const descendants = new Set();
+    const queue = [...(this.adjacencyList.get(id) || [])];
+    const visited = new Set(); // To prevent infinite loops in case of cycles (though cycles should be detected elsewhere)
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (!visited.has(current)) {
+        visited.add(current);
+        descendants.add(current);
+        const neighbors = this.adjacencyList.get(current) || [];
+        for (const neighbor of neighbors) {
+          if (!visited.has(neighbor)) {
+            queue.push(neighbor);
+          }
+        }
+      }
+    }
+    return Array.from(descendants);
+  }
+
   // Calculate impact score (number of unique descendants) for each task
   getBottleneckTasks() {
-    const bottlenecks = [];
+    const bottleneckMap = new Map(); // Use Map to consolidate by taskId
 
     // Iterate over all tasks in the graph
     for (const taskId of this.adjacencyList.keys()) {
       const dependentSet = new Set();
-      const queue = [...(this.adjacencyList.get(taskId) || [])];
 
-      // BFS to find all unique reachable nodes
-      while (queue.length > 0) {
-        const current = queue.shift();
-        if (!dependentSet.has(current)) {
-          dependentSet.add(current);
-          // Add current node's dependents to queue
-          const followers = this.adjacencyList.get(current) || [];
-          queue.push(...followers);
-        }
+      // Get all tasks that depend on this task (direct dependents)
+      const dependents = this.adjacencyList.get(taskId) || [];
+
+      for (const depId of dependents) {
+        dependentSet.add(depId);
+
+        // Recursively add all descendants
+        const descendants = this.getAllDescendants(depId);
+        descendants.forEach(d => dependentSet.add(d));
       }
 
-      // Only include if it blocks at least one task
-      if (dependentSet.size > 0) {
-        bottlenecks.push({
-          taskId,
-          blockedCount: dependentSet.size,
-          blockedTaskIds: Array.from(dependentSet)
-        });
+      const blockedCount = dependentSet.size;
+      const blockedTaskIds = Array.from(dependentSet);
+
+      // Only add to map if this task blocks at least one other task
+      if (blockedCount > 0) {
+        // If taskId already exists, merge the blocked tasks
+        if (bottleneckMap.has(taskId)) {
+          const existing = bottleneckMap.get(taskId);
+          // Merge blocked task IDs (remove duplicates)
+          const mergedBlockedIds = [...new Set([...existing.blockedTaskIds, ...blockedTaskIds])];
+          existing.blockedTaskIds = mergedBlockedIds;
+          existing.blockedCount = mergedBlockedIds.length;
+        } else {
+          bottleneckMap.set(taskId, {
+            taskId,
+            blockedCount,
+            blockedTaskIds
+          });
+        }
       }
     }
 
-    // Sort by impact (descending)
+    // Convert map to array and sort by impact (descending)
+    const bottlenecks = Array.from(bottleneckMap.values());
     return bottlenecks.sort((a, b) => b.blockedCount - a.blockedCount);
   }
 }

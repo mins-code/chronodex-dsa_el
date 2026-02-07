@@ -15,21 +15,28 @@ const Dashboard = ({ user, onLogout }) => {
   const [forecast, setForecast] = useState([]);
   const [bottlenecks, setBottlenecks] = useState([]);
 
-  // Refresh tasks on mount to ensure fresh data
+  // Refresh tasks on mount and fetch bottlenecks whenever tasks change
   useEffect(() => {
     fetchTasks();
+  }, [fetchTasks]);
 
-    // Fetch bottlenecks
+  // Fetch bottlenecks whenever tasks change
+  useEffect(() => {
     const fetchBottlenecks = async () => {
       try {
         const data = await getDependencyBottlenecks();
+        console.log('[FRONTEND DEBUG] Bottlenecks received:', data);
         setBottlenecks(data);
       } catch (error) {
         console.error("Failed to fetch bottlenecks", error);
       }
     };
-    fetchBottlenecks();
-  }, [fetchTasks]);
+
+    // Only fetch if we have tasks
+    if (tasks && tasks.length > 0) {
+      fetchBottlenecks();
+    }
+  }, [tasks]); // Re-fetch when tasks change
 
   // Calculate Forecast & Daily Stats
   useEffect(() => {
@@ -164,11 +171,6 @@ const Dashboard = ({ user, onLogout }) => {
                       {bottleneck.blockedTasks && bottleneck.blockedTasks.map(bt => (
                         <li key={bt.id}>{bt.title}</li>
                       ))}
-                      {bottleneck.blockedCount > (bottleneck.blockedTasks?.length || 0) && (
-                        <li className="more-count">
-                          + {bottleneck.blockedCount - (bottleneck.blockedTasks?.length || 0)} more
-                        </li>
-                      )}
                     </ul>
                   </div>
                 </div>
