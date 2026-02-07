@@ -5,12 +5,18 @@ class PriorityQueue {
 
   // Insert a new node into the heap
   insert(node) {
+    // Refresh heap before operation to ensure current order is correct (aging effect)
+    this.refreshHeap();
+
     this.heap.push(node);
     this._heapifyUp(this.heap.length - 1);
   }
 
   // Extract the node with the minimum priorityScore (most urgent)
   extract() {
+    // Refresh heap to ensure we pop the truly most urgent task right now
+    this.refreshHeap();
+
     if (this.heap.length === 0) return null;
 
     if (this.heap.length === 1) return this.heap.pop();
@@ -27,36 +33,66 @@ class PriorityQueue {
     return this.heap.length > 0 ? this.heap[0] : null;
   }
 
-  // Static method to calculate priorityScore (MIN HEAP: lower score = more urgent)
+  // Static method to calculate priorityScore (Live Score)
   static calculateScore(deadline, priority) {
     const priorityMap = {
-      Critical: 1,   // Most urgent = lowest weight
-      High: 5,
-      Medium: 10,
-      Low: 20,       // Least urgent = highest weight
+      Critical: 0,
+      High: 10,
+      Medium: 20,
+      Low: 30
     };
 
-    const priorityWeight = priorityMap[priority] || 20; // Default to Low if unknown
+    const weight = priorityMap[priority] !== undefined ? priorityMap[priority] : 30;
 
-    const now = new Date();
-    const deadlineDate = new Date(deadline);
+    const now = Date.now();
+    const deadlineDate = new Date(deadline).getTime();
+
     // Time difference in hours
-    const hoursUntilDeadline = (deadlineDate - now) / (1000 * 60 * 60);
+    const diffInHours = (deadlineDate - now) / 3600000;
 
-    let urgencyScore = 0;
+    // Formula: Weight + Math.max(0, Math.min(diffInHours, 19))
+    // Capped at 19 hours. Overdue (negative diff) is treated as 0 diff -> Score = Weight + 0.
+    const score = weight + Math.max(0, Math.min(diffInHours, 19));
 
-    // If deadline is passed or extremely close (<= 0), assign a very low urgency score
-    // to ensure it bubbles to top of min heap (most urgent)
-    if (hoursUntilDeadline <= 0) {
-      urgencyScore = -1000;
-    } else {
-      // Closer deadlines get lower scores (more urgent)
-      urgencyScore = hoursUntilDeadline;
+    return parseFloat(score.toFixed(4));
+  }
+
+  // Re-calculate all scores based on current time and re-heapify
+  refreshHeap() {
+    for (let i = 0; i < this.heap.length; i++) {
+      const node = this.heap[i];
+      if (node.deadline && node.priority) {
+        // Note: duration is not used in this new formula, just deadline and priority
+        node.priorityScore = PriorityQueue.calculateScore(node.deadline, node.priority);
+      }
     }
 
-    // Score = (PriorityWeight) + (HoursUntilDeadline)
-    // Lower total score = more urgent
-    return priorityWeight + urgencyScore;
+    for (let i = Math.floor(this.heap.length / 2) - 1; i >= 0; i--) {
+      this._heapifyDown(i);
+    }
+  }
+
+  // Build heap from an array of tasks (Self-Healing logic)
+  buildHeap(tasks) {
+    this.heap = [];
+    tasks.forEach(task => {
+      // Calculate live score logic is mostly handled by refreshHeap if we insert raw nodes?
+      // Or we calculate here. calculateScore is static.
+      const score = PriorityQueue.calculateScore(task.deadline, task.priority);
+
+      this.heap.push({
+        taskId: task._id || task.taskId, // Handle potentially different object structures
+        priorityScore: score,
+        deadline: task.deadline,
+        priority: task.priority,
+        duration: task.duration
+      });
+    });
+
+    // Heapify entire array
+    for (let i = Math.floor(this.heap.length / 2) - 1; i >= 0; i--) {
+      this._heapifyDown(i);
+    }
   }
 
   // Helper method to maintain min heap property after insertion

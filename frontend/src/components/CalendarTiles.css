@@ -1,0 +1,409 @@
+/* ========== CALENDAR GRID SYSTEM - STRICT RULES ========== */
+
+/* 
+  NON-NEGOTIABLE GRID RULES:
+  - All tiles MUST be exactly the same size
+  - Content NEVER resizes tiles
+  - Use fixed dimensions with overflow handling
+*/
+
+.monthly-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.625rem;
+    /* 10px - tight, academic spacing */
+    grid-auto-rows: 110px;
+    /* FIXED HEIGHT - tiles never resize */
+}
+
+/* ========== CALENDAR TILE - ACADEMIC GLASSMORPHISM ========== */
+
+.day-tile {
+    /* FIXED DIMENSIONS - NON-NEGOTIABLE */
+    height: 110px;
+    min-height: 110px;
+    max-height: 110px;
+
+    /* LAYOUT */
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 0.625rem;
+    position: relative;
+    overflow: hidden;
+    /* Critical: prevents content from breaking out */
+
+    /* GLASSMORPHISM - Deep, Calm, Intelligent */
+    background: linear-gradient(135deg,
+            rgba(15, 23, 42, 0.65) 0%,
+            rgba(30, 41, 59, 0.55) 100%);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+
+    /* BORDERS - Soft, Muted */
+    border: 1px solid rgba(120, 180, 255, 0.12);
+    border-radius: 8px;
+
+    /* SUBTLE INNER GLOW */
+    box-shadow:
+        inset 0 1px 0 rgba(120, 180, 255, 0.08),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+        0 2px 8px rgba(0, 0, 0, 0.15);
+
+    /* SMOOTH TRANSITIONS */
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* CURSOR */
+    cursor: pointer;
+}
+
+/* HOVER STATE - Elegant Elevation */
+.day-tile:hover {
+    background: linear-gradient(135deg,
+            rgba(15, 23, 42, 0.75) 0%,
+            rgba(30, 41, 59, 0.65) 100%);
+    border-color: rgba(120, 180, 255, 0.25);
+
+    /* SUBTLE BLUE GLOW - Not harsh */
+    box-shadow:
+        inset 0 1px 0 rgba(120, 180, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+        0 4px 16px rgba(56, 189, 248, 0.12),
+        0 0 24px rgba(56, 189, 248, 0.06);
+
+    /* SLIGHT ELEVATION - No sharp motion */
+    transform: translateY(-1px);
+}
+
+/* EMPTY TILES - Invisible, Clean */
+.day-tile.empty {
+    background: transparent;
+    backdrop-filter: none;
+    border: none;
+    box-shadow: none;
+    cursor: default;
+    pointer-events: none;
+}
+
+/* TODAY TILE - Subtle Highlight */
+.day-tile.today {
+    background: linear-gradient(135deg,
+            rgba(56, 189, 248, 0.15) 0%,
+            rgba(125, 211, 252, 0.10) 100%);
+    border-color: rgba(56, 189, 248, 0.35);
+    box-shadow:
+        inset 0 1px 0 rgba(56, 189, 248, 0.2),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+        0 0 20px rgba(56, 189, 248, 0.15);
+}
+
+/* ========== DATE NUMBER - MUTED & MINIMAL ========== */
+
+.day-number-corner {
+    /* POSITIONING - Top-left, out of the way */
+    position: absolute;
+    top: 0.375rem;
+    left: 0.5rem;
+
+    /* TYPOGRAPHY - Small, Muted */
+    font-size: 0.6875rem;
+    /* 11px - very small */
+    font-weight: 500;
+    letter-spacing: 0.03em;
+
+    /* COLOR - Low opacity, never dominates */
+    color: rgba(148, 163, 184, 0.5);
+
+    /* SUBTLE TRANSITION */
+    transition: color 0.3s ease;
+}
+
+.day-tile:hover .day-number-corner {
+    color: rgba(148, 163, 184, 0.7);
+}
+
+.day-tile.today .day-number-corner {
+    color: rgba(125, 211, 252, 0.85);
+    font-weight: 600;
+}
+
+/* ========== TASK PILLS CONTAINER ========== */
+
+.task-pills-container {
+    /* LAYOUT - Vertical stack */
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    /* Tight spacing */
+
+    /* POSITIONING - Below date number */
+    margin-top: 1.25rem;
+
+    /* OVERFLOW HANDLING - Critical for fixed tile size */
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+    /* Allows flex shrinking */
+}
+
+/* ========== TASK PILL - MINIMAL & ACADEMIC ========== */
+
+.task-pill {
+    /* SIZING - Small, compact */
+    height: 20px;
+    /* FIXED - prevents resizing */
+    min-height: 20px;
+    max-height: 20px;
+
+    /* LAYOUT */
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem 0 0.4rem;
+
+    /* SHAPE - Soft rounded, pill-like */
+    border-radius: 10px;
+
+    /* BACKGROUND - Muted, not bright */
+    background: rgba(30, 41, 59, 0.5);
+
+    /* BORDER - Thin colored left border for priority */
+    border-left: 2px solid rgba(148, 163, 184, 0.4);
+    border-top: 1px solid rgba(120, 180, 255, 0.08);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+
+    /* OVERFLOW - Single line only */
+    overflow: hidden;
+
+    /* TRANSITION */
+    transition: all 0.2s ease;
+}
+
+.task-pill:hover {
+    background: rgba(30, 41, 59, 0.7);
+    border-top-color: rgba(120, 180, 255, 0.15);
+}
+
+/* TASK PILL TEXT - Minimal Typography */
+.task-pill-text {
+    /* TYPOGRAPHY - Very small, single line */
+    font-size: 0.6875rem;
+    /* 11px - significantly reduced */
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.01em;
+
+    /* COLOR - Muted, not bright */
+    color: rgba(226, 232, 240, 0.75);
+
+    /* OVERFLOW - Ellipsis for long text */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    /* PREVENT SELECTION ISSUES */
+    user-select: none;
+}
+
+/* ========== OVERFLOW INDICATOR - SUBTLE ========== */
+
+.task-overflow-pill {
+    /* SIZING - Same as task pill */
+    height: 18px;
+    min-height: 18px;
+    max-height: 18px;
+
+    /* LAYOUT */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.5rem;
+    margin-top: 0.15rem;
+
+    /* SHAPE */
+    border-radius: 9px;
+
+    /* STYLING - Very subtle */
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+
+    /* TYPOGRAPHY */
+    font-size: 0.625rem;
+    /* 10px - tiny */
+    font-weight: 500;
+    color: rgba(125, 211, 252, 0.7);
+    letter-spacing: 0.02em;
+
+    /* CURSOR */
+    cursor: pointer;
+
+    /* TRANSITION */
+    transition: all 0.2s ease;
+}
+
+.task-overflow-pill:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.35);
+    color: rgba(125, 211, 252, 0.9);
+    transform: scale(1.02);
+}
+
+/* ========== PRIORITY COLOR SYSTEM - MUTED PALETTE ========== */
+
+/* 
+  Priority colors are applied via borderLeftColor
+  These are muted, academic tones - NOT bright solids
+*/
+
+/* High Priority - Muted Red */
+.task-pill[style*="rgb(255, 77, 77)"] {
+    border-left-color: rgba(239, 68, 68, 0.6);
+}
+
+/* Medium Priority - Muted Orange */
+.task-pill[style*="rgb(255, 165, 0)"] {
+    border-left-color: rgba(251, 146, 60, 0.6);
+}
+
+/* Low Priority - Muted Green */
+.task-pill[style*="rgb(76, 175, 80)"] {
+    border-left-color: rgba(74, 222, 128, 0.5);
+}
+
+/* ========== DAY NAMES HEADER ========== */
+
+.day-name {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    /* 11px - small */
+    font-weight: 600;
+    text-align: center;
+    padding: 0.5rem;
+    color: rgba(125, 211, 252, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* ========== RESPONSIVE ADJUSTMENTS ========== */
+
+@media (max-width: 1024px) {
+    .monthly-grid {
+        grid-auto-rows: 100px;
+        /* Slightly smaller on tablets */
+    }
+
+    .day-tile {
+        height: 100px;
+        min-height: 100px;
+        max-height: 100px;
+    }
+}
+
+@media (max-width: 768px) {
+    .monthly-grid {
+        gap: 0.5rem;
+        grid-auto-rows: 90px;
+        /* Smaller on mobile */
+    }
+
+    .day-tile {
+        height: 90px;
+        min-height: 90px;
+        max-height: 90px;
+        padding: 0.4rem 0.5rem;
+    }
+
+    .day-number-corner {
+        font-size: 0.625rem;
+        /* 10px */
+    }
+
+    .task-pill {
+        height: 18px;
+        min-height: 18px;
+        max-height: 18px;
+    }
+
+    .task-pill-text {
+        font-size: 0.625rem;
+        /* 10px */
+    }
+}
+
+@media (max-width: 480px) {
+    .monthly-grid {
+        gap: 0.375rem;
+        grid-auto-rows: 75px;
+        /* Very compact on small phones */
+    }
+
+    .day-tile {
+        height: 75px;
+        min-height: 75px;
+        max-height: 75px;
+        padding: 0.3rem 0.4rem;
+    }
+
+    .task-pills-container {
+        margin-top: 1rem;
+        gap: 0.25rem;
+    }
+
+    .task-pill {
+        height: 16px;
+        min-height: 16px;
+        max-height: 16px;
+    }
+
+    .task-pill-text {
+        font-size: 0.5625rem;
+        /* 9px */
+    }
+
+    .task-overflow-pill {
+        height: 15px;
+        min-height: 15px;
+        max-height: 15px;
+        font-size: 0.5625rem;
+        /* 9px */
+    }
+}
+
+/* ========== DESIGN SYSTEM SUMMARY ========== */
+
+/*
+GRID RULES:
+✓ Fixed tile dimensions (110px height)
+✓ Equal width via CSS Grid (1fr each)
+✓ Content never resizes tiles
+✓ Overflow handled internally
+
+GLASSMORPHISM:
+✓ Semi-transparent bluish-black background
+✓ backdrop-filter: blur(14px)
+✓ Subtle inner glow
+✓ Soft borders (rgba 0.12 opacity)
+
+DATE NUMBER:
+✓ Small (11px)
+✓ Muted (50% opacity)
+✓ Top-left positioned
+✓ Letter spacing
+
+TASK PILLS:
+✓ Significantly reduced font (11px)
+✓ Pill-shaped (border-radius: 10px)
+✓ Limited height (20px fixed)
+✓ Muted colors
+✓ Thin colored left border for priority
+✓ Single line with ellipsis
+
+OVERFLOW:
+✓ Max 2 tasks visible
+✓ "+X" indicator
+✓ Tiles never resize
+
+VISUAL TONE:
+✓ Calm, intelligent, futuristic
+✓ Academic, not playful
+✓ Control panel aesthetic
+✓ Designed for professionals
+*/

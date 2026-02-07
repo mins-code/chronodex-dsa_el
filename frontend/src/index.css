@@ -238,51 +238,35 @@ select:focus {
   background: rgba(15, 23, 42, 0.85);
 }
 
-/* Scrollbar styling for Deep Space theme */
+/* Global Scrollbar Customization - Sky Blue Theme */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-gradient-start);
+  background: rgba(15, 23, 42, 0.6);
+  border-left: 1px solid var(--glass-border);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 5px;
+  background: linear-gradient(180deg, #38bdf8 0%, #7dd3fc 100%);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(56, 189, 248, 0.3);
-  border-color: var(--accent-blue);
+  background: linear-gradient(180deg, #0ea5e9 0%, #38bdf8 100%);
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
 
-/* Firefox scrollbar */
+/* Firefox scrollbar support */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--glass-bg) var(--bg-gradient-start);
-}
-
-/* Global Thin Scrollbars - High-Tech Style */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #1e293b;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 3px;
-  transition: background 0.3s ease;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #38bdf8;
+  scrollbar-color: #38bdf8 rgba(15, 23, 42, 0.6);
 }
 
 /* Pop-and-Fade Modal Animation */

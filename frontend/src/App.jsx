@@ -15,6 +15,8 @@ import Signup from './components/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
 import SettingsPage from './components/SettingsPage';
 import Planner from './components/Planner';
+import CalendarView from './components/CalendarView';
+import TaskDetail from './components/TaskDetail';
 import './App.css';
 
 function App() {
@@ -75,6 +77,16 @@ function App() {
                       element={<Dashboard user={user} onLogout={handleLogout} />}
                     />
 
+                    {/* Calendar Route */}
+                    <Route
+                      path="/calendar"
+                      element={
+                        <div className="calendar-page">
+                          <CalendarView />
+                        </div>
+                      }
+                    />
+
                     {/* Create Task Route */}
                     <Route
                       path="/create"
@@ -127,6 +139,7 @@ function App() {
 
                     {/* Task Detail Route */}
                     <Route path="/task/:id" element={<TaskDetailCard />} />
+                    <Route path="/tasks/:id" element={<TaskDetail />} />
                   </Routes>
                 </div>
               </div>

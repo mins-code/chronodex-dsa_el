@@ -25,15 +25,30 @@ module.exports = {
       console.log('Initializing in-memory data structures...');
       const tasks = await Task.find();
 
-      tasks.forEach((task) => {
+      // Use a for...of loop to handle async operations (saving updated score)
+      for (const task of tasks) {
         const { _id, title, deadline, priority, prerequisites, duration } = task;
+
+        // Recalculate priorityScore using the new consistent formula
+        const priorityScore = PriorityQueue.calculateScore(deadline, priority, duration);
+
+        // Update the task in MongoDB with the new score (Migration)
+        if (task.priorityScore !== priorityScore) {
+          task.priorityScore = priorityScore;
+          await task.save();
+        }
 
         // Insert into Trie
         taskTrie.insert(title, _id);
 
-        // Insert into PriorityQueue
-        const priorityScore = PriorityQueue.calculateScore(deadline, priority);
-        taskQueue.insert({ taskId: _id, priorityScore });
+        // Insert into PriorityQueue with FULL details for refreshHeap
+        taskQueue.insert({
+          taskId: _id,
+          priorityScore,
+          deadline,
+          priority,
+          duration
+        });
 
         // Insert into DependencyGraph
         dependencyGraph.addTask(_id);
@@ -49,10 +64,7 @@ module.exports = {
           const endTime = new Date(deadline).getTime();
           intervalScheduler.addInterval(startTime, endTime, _id);
         }
-      });
-
-      // mergeIntervals removed to preserve task IDs for deletion and conflict checking
-      // intervalScheduler.mergeIntervals();
+      }
 
       console.log('In-memory state initialized successfully with ' + tasks.length + ' tasks.');
     } catch (error) {

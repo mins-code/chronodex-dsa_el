@@ -10,8 +10,30 @@ const PriorityQueueView = () => {
   const [undoInfo, setUndoInfo] = useState(null);
   const navigate = useNavigate();
 
+  const calculateDynamicScore = (task) => {
+    const priorityMap = { Critical: 0, High: 10, Medium: 20, Low: 30 };
+    const weight = priorityMap[task.priority] !== undefined ? priorityMap[task.priority] : 30;
+    const now = Date.now();
+    const deadline = new Date(task.deadline).getTime();
+    const diffInHours = (deadline - now) / 3600000;
+    return weight + Math.max(0, Math.min(diffInHours, 19));
+  };
+
   useEffect(() => {
     fetchTasks();
+
+    const intervalId = setInterval(() => {
+      setTasks((prevTasks) => {
+        const sorted = [...prevTasks].sort((a, b) => {
+          const scoreA = calculateDynamicScore(a);
+          const scoreB = calculateDynamicScore(b);
+          return scoreA - scoreB;
+        });
+        return sorted;
+      });
+    }, 60000); // 60 seconds
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchTasks = async () => {
@@ -150,7 +172,7 @@ const PriorityQueueView = () => {
               <div className="card-details">
                 <p className={isCompleted ? 'completed-text' : ''}>
                   <strong>Priority Score:</strong>{' '}
-                  {task.priorityScore ? task.priorityScore.toFixed(2) : 'N/A'}
+                  {task.priorityScore !== undefined && task.priorityScore !== null ? task.priorityScore.toFixed(2) : 'N/A'}
                 </p>
                 <p className={isCompleted ? 'completed-text' : ''}>
                   <strong>Deadline:</strong>{' '}

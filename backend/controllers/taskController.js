@@ -1,6 +1,123 @@
 const Task = require('../models/Task');
 const { taskQueue, taskTrie, dependencyGraph, intervalScheduler, undoStack } = require('../state');
-const PriorityQueue = require('../utils/PriorityQueue'); // Make sure this is imported
+const PriorityQueue = require('../utils/PriorityQueue');
+const { calculateTimeDeviation } = require('../utils/UserPatternAnalyzer');
+
+const getTasks = async (req, res) => {
+  try {
+    // Fetch only tasks belonging to the authenticated user
+    const tasks = await Task.find({ userId: req.userId });
+
+    // Calculate deviation based on pattern analysis
+    const userId = req.userId;
+
+    const deviationPercentage = await calculateTimeDeviation(userId);
+
+    // Convert to plain objects
+    const plainTasks = tasks.map(t => t.toObject());
+
+    // Inject live scores into Minheap (Self-Healing)
+    // This rebuilds the global heap with fresh scores relative to NOW
+    taskQueue.buildHeap(plainTasks);
+
+    // Enrich tasks with dynamic priority score for display
+    const tasksWithDynamicScore = plainTasks.map(t => {
+      t.priorityScore = PriorityQueue.calculateScore(t.deadline, t.priority);
+      return t;
+    });
+
+    // Sort by priorityScore (ascending) - Lower score = Higher Urgency
+    tasksWithDynamicScore.sort((a, b) => a.priorityScore - b.priorityScore);
+
+    // Structure response with tasks and suggestion
+    res.status(200).json({
+      tasks: tasksWithDynamicScore,
+      suggestedBufferTime: deviationPercentage // percentage, e.g. 20 for 20%
+    });
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    res.status(500).json({ error: 'An error occurred while fetching tasks.' });
+  }
+};
+
+const updateTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const updates = req.body;
+
+    delete updates._id;
+
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found.' });
+    }
+
+    // 1. Handle Priority/Deadline updates (Recalculate Internal Score)
+    if (
+      (updates.deadline && updates.deadline !== task.deadline) ||
+      (updates.priority && updates.priority !== task.priority) ||
+      (updates.duration && updates.duration !== task.duration)
+    ) {
+      const newDeadline = updates.deadline || task.deadline;
+      const newPriority = updates.priority || task.priority;
+      const newDuration = updates.duration || task.duration;
+
+      // Note: duration unused in new formula but kept for compatibility
+      const newScore = PriorityQueue.calculateScore(newDeadline, newPriority);
+      updates.priorityScore = newScore;
+
+      // Update PriorityQueue
+      taskQueue.heap = taskQueue.heap.filter(
+        (node) => node.taskId && node.taskId.toString() !== taskId.toString()
+      );
+      taskQueue.insert({
+        taskId: taskId,
+        priorityScore: newScore,
+        deadline: newDeadline,
+        priority: newPriority,
+        duration: newDuration
+      });
+    }
+
+    // 2. Handle Title updates (Trie)
+    if (updates.title && updates.title !== task.title) {
+      taskTrie.insert(task.title, null);
+      taskTrie.insert(updates.title, taskId);
+    }
+
+    const updatedTask = await Task.findByIdAndUpdate(taskId, updates, {
+      new: true,
+    });
+
+    // 4. Handle IntervalScheduler updates
+    if (
+      (updates.deadline && updates.deadline !== task.deadline) ||
+      (updates.duration && updates.duration !== task.duration)
+    ) {
+      intervalScheduler.intervals = intervalScheduler.intervals.filter(
+        ([, , id]) => id && id.toString() !== taskId.toString()
+      );
+
+      const finalDeadline = updates.deadline || task.deadline;
+      const finalDuration = updates.duration || task.duration;
+
+      if (finalDeadline && finalDuration) {
+        const startTime = new Date(finalDeadline).getTime() - finalDuration * 60 * 1000;
+        const endTime = new Date(finalDeadline).getTime();
+        intervalScheduler.addInterval(startTime, endTime, taskId);
+      }
+    }
+
+    // Enrich response
+    const responseTask = updatedTask.toObject();
+    responseTask.priorityScore = PriorityQueue.calculateScore(responseTask.deadline, responseTask.priority);
+
+    res.status(200).json(responseTask);
+  } catch (error) {
+    console.error('Error updating task:', error);
+    res.status(500).json({ error: 'Failed to update task.' });
+  }
+};
 
 const createTask = async (req, res) => {
   try {
@@ -26,7 +143,7 @@ const createTask = async (req, res) => {
       }
     }
 
-    // Calculate priorityScore before saving
+    // Calculate priorityScore before saving (Internal Absolute Score)
     const priorityScore = PriorityQueue.calculateScore(deadline, priority);
 
     // Create and save the new task to MongoDB, including priorityScore and userId
@@ -43,8 +160,14 @@ const createTask = async (req, res) => {
 
     const savedTask = await newTask.save();
 
-    // 1. Insert into PriorityQueue
-    taskQueue.insert({ taskId: savedTask._id, priorityScore });
+    // 1. Insert into PriorityQueue with full details for dynamic recalculation
+    taskQueue.insert({
+      taskId: savedTask._id,
+      priorityScore,
+      deadline,
+      priority,
+      duration
+    });
 
     // 2. Insert the title into the Trie for searching
     taskTrie.insert(title, savedTask._id);
@@ -73,10 +196,14 @@ const createTask = async (req, res) => {
       intervalScheduler.addInterval(startTime, endTime, savedTask._id);
     }
 
+    // Enrich response
+    const responseTask = savedTask.toObject();
+    responseTask.priorityScore = PriorityQueue.calculateScore(deadline, priority);
+
     // Respond with the saved task
     res.status(201).json({
       message: 'Task created successfully.',
-      task: savedTask,
+      task: responseTask,
     });
   } catch (error) {
     console.error('Error creating task:', error);
@@ -197,7 +324,13 @@ const undoDelete = async (req, res) => {
 
     // Re-insert the task into the PriorityQueue
     const priorityScore = PriorityQueue.calculateScore(restoredTask.deadline, restoredTask.priority);
-    taskQueue.insert({ taskId: restoredTask._id, priorityScore });
+    taskQueue.insert({
+      taskId: restoredTask._id,
+      priorityScore,
+      deadline: restoredTask.deadline,
+      priority: restoredTask.priority,
+      duration: restoredTask.duration
+    });
 
     // Re-insert the task into the Trie
     taskTrie.insert(restoredTask.title, restoredTask._id);
@@ -246,95 +379,6 @@ const clearAllTasks = async (req, res) => {
   } catch (error) {
     console.error('Error clearing tasks:', error);
     res.status(500).json({ error: 'An error occurred while clearing tasks.' });
-  }
-};
-
-const { calculateTimeDeviation } = require('../utils/UserPatternAnalyzer');
-
-const getTasks = async (req, res) => {
-  try {
-    // Fetch only tasks belonging to the authenticated user
-    const tasks = await Task.find({ userId: req.userId });
-
-    // Calculate deviation based on pattern analysis
-    const userId = req.userId;
-
-    const deviationPercentage = await calculateTimeDeviation(userId);
-
-    // Structure response with tasks and suggestion
-    res.status(200).json({
-      tasks: tasks,
-      suggestedBufferTime: deviationPercentage // percentage, e.g. 20 for 20%
-    });
-  } catch (error) {
-    console.error('Error fetching tasks:', error);
-    res.status(500).json({ error: 'An error occurred while fetching tasks.' });
-  }
-};
-
-const updateTask = async (req, res) => {
-  try {
-    const { taskId } = req.params;
-    const updates = req.body;
-
-    delete updates._id;
-
-    const task = await Task.findById(taskId);
-    if (!task) {
-      return res.status(404).json({ error: 'Task not found.' });
-    }
-
-    // 1. Handle Priority/Deadline updates (Recalculate Score)
-    if (
-      (updates.deadline && updates.deadline !== task.deadline) ||
-      (updates.priority && updates.priority !== task.priority)
-    ) {
-      const newDeadline = updates.deadline || task.deadline;
-      const newPriority = updates.priority || task.priority;
-
-      const newScore = PriorityQueue.calculateScore(newDeadline, newPriority);
-      updates.priorityScore = newScore;
-
-      // Update PriorityQueue
-      taskQueue.heap = taskQueue.heap.filter(
-        (node) => node.taskId && node.taskId.toString() !== taskId.toString()
-      );
-      taskQueue.insert({ taskId: taskId, priorityScore: newScore });
-    }
-
-    // 2. Handle Title updates (Trie)
-    if (updates.title && updates.title !== task.title) {
-      taskTrie.insert(task.title, null);
-      taskTrie.insert(updates.title, taskId);
-    }
-
-    const updatedTask = await Task.findByIdAndUpdate(taskId, updates, {
-      new: true,
-    });
-
-    // 4. Handle IntervalScheduler updates
-    if (
-      (updates.deadline && updates.deadline !== task.deadline) ||
-      (updates.duration && updates.duration !== task.duration)
-    ) {
-      intervalScheduler.intervals = intervalScheduler.intervals.filter(
-        ([, , id]) => id && id.toString() !== taskId.toString()
-      );
-
-      const finalDeadline = updates.deadline || task.deadline;
-      const finalDuration = updates.duration || task.duration;
-
-      if (finalDeadline && finalDuration) {
-        const startTime = new Date(finalDeadline).getTime() - finalDuration * 60 * 1000;
-        const endTime = new Date(finalDeadline).getTime();
-        intervalScheduler.addInterval(startTime, endTime, taskId);
-      }
-    }
-
-    res.status(200).json(updatedTask);
-  } catch (error) {
-    console.error('Error updating task:', error);
-    res.status(500).json({ error: 'Failed to update task.' });
   }
 };
 

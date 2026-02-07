@@ -27,6 +27,15 @@ const Planner = () => {
     const [isDraggingNode, setIsDraggingNode] = useState(false);
     const trashZoneRef = useRef(null);
 
+    const calculateDynamicScore = (task) => {
+        const priorityMap = { Critical: 0, High: 10, Medium: 20, Low: 30 };
+        const weight = priorityMap[task.priority] !== undefined ? priorityMap[task.priority] : 30;
+        const now = Date.now();
+        const deadline = new Date(task.deadline).getTime();
+        const diffInHours = (deadline - now) / 3600000;
+        return weight + Math.max(0, Math.min(diffInHours, 19));
+    };
+
     // Clear Layout Handler
     const onClear = useCallback(() => {
         if (window.confirm('Are you sure you want to clear the entire layout?')) {
@@ -97,6 +106,19 @@ const Planner = () => {
         };
 
         fetchTasks();
+
+        const intervalId = setInterval(() => {
+            setTasks((prevTasks) => {
+                const sorted = [...prevTasks].sort((a, b) => {
+                    const scoreA = calculateDynamicScore(a);
+                    const scoreB = calculateDynamicScore(b);
+                    return scoreA - scoreB;
+                });
+                return sorted;
+            });
+        }, 60000); // 60 seconds
+
+        return () => clearInterval(intervalId);
     }, []);
 
     const onConnect = useCallback(
