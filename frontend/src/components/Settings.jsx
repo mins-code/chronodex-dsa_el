@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, ShieldCheck, Database, LogOut, Trash2, CheckCircle, Lock } from 'lucide-react';
+import { User, ShieldCheck, Database, LogOut, Trash2, CheckCircle, Lock, Shuffle, Save } from 'lucide-react';
 import './Settings.css';
 
 const Settings = ({ user, onLogout }) => {
@@ -13,6 +13,12 @@ const Settings = ({ user, onLogout }) => {
     });
     const [passwordMessage, setPasswordMessage] = useState('');
     const [passwordLoading, setPasswordLoading] = useState(false);
+
+    // Avatar State
+    const [avatarUrl, setAvatarUrl] = useState(user?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.username || 'user'}`);
+    const [avatarLoading, setAvatarLoading] = useState(false);
+    const [avatarMessage, setAvatarMessage] = useState('');
+
     const navigate = useNavigate();
 
     const dataStructures = [
@@ -34,6 +40,53 @@ const Settings = ({ user, onLogout }) => {
             ...prev,
             [name]: value,
         }));
+    };
+
+    const handleShuffleAvatar = () => {
+        const randomSeed = Math.random().toString(36).substring(7);
+        setAvatarUrl(`https://api.dicebear.com/7.x/bottts/svg?seed=${randomSeed}`);
+        setAvatarMessage('');
+    };
+
+    const handleSaveAvatar = async () => {
+        setAvatarLoading(true);
+        setAvatarMessage('');
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5001/api/auth/update-avatar', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ avatar: avatarUrl }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to update avatar');
+            }
+
+            // Update local storage
+            const updatedUser = { ...user, avatar: data.avatar };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+
+            setAvatarMessage('✓ Saved!');
+
+            // Dispatch event to update Header immediately
+            window.dispatchEvent(new Event('userAvatarUpdated'));
+
+            // Allow user to see success message without reload
+            setTimeout(() => {
+                setAvatarMessage('');
+            }, 3000);
+
+        } catch (error) {
+            setAvatarMessage(`✗ ${error.message}`);
+        } finally {
+            setAvatarLoading(false);
+        }
     };
 
     const handlePasswordSubmit = async (e) => {
@@ -134,12 +187,29 @@ const Settings = ({ user, onLogout }) => {
 
                 <div className="profile-card">
                     <div className="profile-info">
-                        <div className="profile-avatar">
-                            <User size={32} />
+                        <div className="profile-avatar-container">
+                            <img src={avatarUrl} alt="Avatar" className="profile-avatar-img" />
                         </div>
                         <div className="profile-details">
                             <h3>{user?.username || 'User'}</h3>
                             <p>{user?.email || 'user@example.com'}</p>
+
+                            <div className="avatar-actions">
+                                <button onClick={handleShuffleAvatar} className="avatar-action-btn shuffle" title="Shuffle Avatar">
+                                    <Shuffle size={16} />
+                                    <span>Shuffle</span>
+                                </button>
+                                <button onClick={handleSaveAvatar} className="avatar-action-btn save" title="Save Avatar" disabled={avatarLoading}>
+                                    <Save size={16} />
+                                    <span>Save</span>
+                                </button>
+                            </div>
+
+                            {avatarMessage && (
+                                <span className={`avatar-message ${avatarMessage.startsWith('✓') ? 'success' : 'error'}`}>
+                                    {avatarMessage}
+                                </span>
+                            )}
                         </div>
                     </div>
 

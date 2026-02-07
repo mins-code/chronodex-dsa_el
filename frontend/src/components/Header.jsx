@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, LogOut } from 'lucide-react';
 import './Header.css';
@@ -7,7 +7,17 @@ const Header = ({ onLogout }) => {
     const navigate = useNavigate();
 
     // Get user info from localStorage
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
+
+    useEffect(() => {
+        const handleUserUpdate = () => {
+            setUser(JSON.parse(localStorage.getItem('user') || '{}'));
+        };
+
+        window.addEventListener('userAvatarUpdated', handleUserUpdate);
+        return () => window.removeEventListener('userAvatarUpdated', handleUserUpdate);
+    }, []);
+
     const userName = user.username || 'User';
     const userEmail = user.email || '';
 
@@ -34,7 +44,11 @@ const Header = ({ onLogout }) => {
             <div className="header-right">
                 {/* User Avatar and Name */}
                 <div className="header-user">
-                    <div className="header-avatar">{avatarLetter}</div>
+                    {user.avatar ? (
+                        <img src={user.avatar} alt="Avatar" className="header-avatar-img" />
+                    ) : (
+                        <div className="header-avatar">{avatarLetter}</div>
+                    )}
                     <div className="header-user-info">
                         <span className="header-username">{userName}</span>
                         {userEmail && <span className="header-email">{userEmail}</span>}

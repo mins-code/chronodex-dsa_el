@@ -48,6 +48,7 @@ const register = async (req, res) => {
                 id: user._id,
                 username: user.username,
                 email: user.email,
+                avatar: user.avatar,
             },
         });
     } catch (error) {
@@ -88,6 +89,7 @@ const login = async (req, res) => {
                 id: user._id,
                 username: user.username,
                 email: user.email,
+                avatar: user.avatar,
             },
         });
     } catch (error) {
@@ -109,6 +111,7 @@ const verifyToken = async (req, res) => {
                 id: user._id,
                 username: user.username,
                 email: user.email,
+                avatar: user.avatar,
             },
         });
     } catch (error) {
@@ -157,4 +160,31 @@ const changePassword = async (req, res) => {
     }
 };
 
-module.exports = { register, login, verifyToken, changePassword };
+// Update user avatar
+const updateAvatar = async (req, res) => {
+    try {
+        const { avatar } = req.body;
+
+        if (!avatar) {
+            return res.status(400).json({ error: 'Avatar URL is required.' });
+        }
+
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        user.avatar = avatar;
+        await user.save();
+
+        res.status(200).json({
+            message: 'Avatar updated successfully.',
+            avatar: user.avatar
+        });
+    } catch (error) {
+        console.error('Error updating avatar:', error);
+        res.status(500).json({ error: 'An error occurred while updating avatar.' });
+    }
+};
+
+module.exports = { register, login, verifyToken, changePassword, updateAvatar };
